@@ -12,25 +12,6 @@ const User = db.users;
 
 app.use(express.static('client'));
 
-var server = http.createServer(app)
-server.listen(port)
-
-var wss = new WebSocketServer({server: server});
-console.log("websocket server created");
-
-wss.on("connection", function(ws) {
-    var id = setInterval(function() {
-        ws.send(JSON.stringify(new Date()), function() {  })
-    }, 1000)
-
-    console.log("websocket connection open")
-
-    ws.on("close", function() {
-        console.log("websocket connection close")
-        clearInterval(id)
-    })
-})
-
 // force: true will drop the table if it already exists
 db.sequelize.sync({force: true}).then(() => {
     console.log('Drop and Resync with { force: true }');
