@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Battleship Game 🛳️</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script>
+        var host = location.origin.replace(/^http/, 'ws')
+        var ws = new WebSocket(host);
+        ws.onmessage = function (event) {
+            var li = document.createElement('li');
+            li.innerHTML = JSON.parse(event.data);
+            document.querySelector('#pings1').appendChild(li);
+        };
+    </script>
+</head>
+
+<body>
+    <h1>Battleship Game</h1>
+    <h1>Pings</h1>
+    <ul id='pings1'></ul>
+    <div id="nameInput" class="input-group">
+        <input type="text" class="form-control" placeholder="Enter a username" />
+        <span class="input-group-btn"></span>
+        <button disabled class="btn btn-primary" id="submitButton" type="button">Submit</button>
+    </div>
+    <p id="userGreeting"></p>
+    <div>
+        <table id="tableGrid">
+        </table>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+    <script language="javascript" type="text/javascript" src="js/game.js"></script>
+</body>
+
+</html>

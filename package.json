@@ -1,0 +1,31 @@
+{
+  "name": "battleship-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "node.js",
+    "postgresql",
+    "game",
+    "webservice"
+  ],
+  "author": "Franz Lea, Trummer Julia, Wieser Stefanie",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "bufferutil": "^4.0.1",
+    "express": "^4.17.1",
+    "pg": "^8.2.1",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^5.21.9",
+    "utf-8-validate": "^5.0.2",
+    "ws": "^7.3.0"
+  },
+  "engines": {
+    "node": "10.x"
+  }
+}
