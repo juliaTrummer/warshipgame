@@ -7,7 +7,7 @@ $(function () {
     var grid = $('#tableGrid');
     var submitButton = $('#submitButton');
     var table = $('<table>');
-
+    //---websocket---
 
     //table
     $(document).ready(function () {
@@ -58,15 +58,14 @@ $(function () {
         if(e.which == 13 && formControl.val().length !== 0){
             onSubmit();
         } else if(formControl.val().length > 0){
-            submitButton.prop('disabled', false);
+            submitButton.prop('disabled', '1');
         } else if(formControl.val().length === 0){
-            submitButton.prop('disabled', true);
+            submitButton.prop('disabled', '1');
         }
     });
 
     function onSubmit(){
         greeting.text('Hello ' + formControl.val() + "!");
-
 
         //TODO: take this value for the prototype
         username = formControl.val();
