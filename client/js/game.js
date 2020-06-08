@@ -4,13 +4,55 @@ $(function () {
     var username = null;
     var formControl = $('.form-control');
     var gridA = $('#tableGridA');
-    var gridB= $('#tableGridB');
+    var gridB = $('#tableGridB');
     var submitButton = $('#submitButton');
     var headingA = $('#headingA');
+    var headingB = $('#headingB');
+    var inputField = $('#nameInput')
     var gridArray = new Array(100).fill(-1);
+
     //---websocket---
+    window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+    if (!window.WebSocket) {
+        console.log('Sorry, your browser does not support websockets')
+        return;
+    }
+    //TODO: heroku host
+    var host = location.origin.replace(/^http/, 'ws')
+   // var host = 'ws://127.0.0.1:5000' - localhost:5000
+    var ws = new WebSocket(host);
+
+    ws.onopen = function () {
+        console.log("Websocket opened")
+    }
+
+    ws.onerror = function (error) {
+        console.log('Sorry, there is a problem with the connection.')
+    }
 
 
+    ws.onmessage = function (message) {
+        console.log('Message received', message.data)
+        try {
+            var json = JSON.parse(message.data);
+            headingB.text(json.data.username+"'s table")
+            console.log('Hello %s!', json.data.username)
+        } catch (e) {
+            console.log('Invalid JSON: ', message.data);
+            return;
+        }
+    };
+
+    setInterval(function () {
+        if (ws.readyState !== 1) {
+            console.log('Unable to communicate with the WebSocket server.')
+        }
+    }, 3000);
+
+
+
+    //table
     $(document).ready(function () {
         createTable(gridA, "A");
         createTable(gridB, "B");
@@ -21,9 +63,9 @@ $(function () {
         var tableBody = gridType;
         var alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
         var id = 1;
-        
+
         for (var i = 0; i < 12; i++) {
-            
+
             var row = $('<tr>');
             for (var j = 0; j < 12; j++) {
                 if ((j === 0 || j === 11) && (i !== 0 && i !== 11)) {
@@ -33,10 +75,10 @@ $(function () {
                 } else if (((i === 0 || i === 11) && (j == 0 || j == 11)) || ((j === 0 || j === 11) && (i == 0 || i == 11))) {
                     var cell = $('<td>');
                 } else {
-                    if(idType==="A"){
-                        var cell = $('<td>').addClass('tableCell field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id+idType).attr('disabled', 'disabled');
+                    if (idType === "A") {
+                        var cell = $('<td>').addClass('tableCell field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id + idType).attr('disabled', 'disabled');
                     } else {
-                        var cell = $('<td>').addClass('tableCell field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id+idType)
+                        var cell = $('<td>').addClass('tableCell field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id + idType)
                     }
                     id++;
                 }
@@ -75,8 +117,8 @@ $(function () {
 
     function onSubmit() {
         username = formControl.val();
-        headingA.text(formControl.val()+"'s Table")
-       // connection.send(username) websocket
+        headingA.text(formControl.val() + "'s Table")
+        ws.send(username) 
         formControl.val("");
         submitButton.prop('disabled', true);
 
@@ -86,7 +128,7 @@ $(function () {
         }
     }
 
-    function generateRandomShips(){
+    function generateRandomShips() {
         //1 x 4 cells
 
         //2 x 3 cells
@@ -96,8 +138,8 @@ $(function () {
         //4 x 1 cells
     }
 
-    function getRandomInt(){
-        return Math.floor(Math.random()*(100 * 1)) + 1;
+    function getRandomInt() {
+        return Math.floor(Math.random() * (100 * 1)) + 1;
     }
 
 });
