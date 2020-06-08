@@ -1,4 +1,4 @@
-.tableCell {
+.table-cell {
     height:60px;
     width: 60px;
     text-align: center;
@@ -31,28 +31,49 @@ table {
     margin-bottom: 30px;
 }
 
-#tableDiv {
+.input-group-hidden {
+    margin: 0 auto;
+    text-align: center;
+    width: 15% !important;
+    margin-bottom: 30px;
+    display: none !important;
+}
+
+.waiting-text {
+    text-align: center;
+    width: 100% !important;
+    margin-bottom: 30px;
+}
+
+.waiting-text-hidden {
+    text-align: center;
+    width: 100% !important;
+    margin-bottom: 30px;
+    display: none !important;
+}
+
+#table-div {
     width: 80%;
     overflow: hidden;
     margin: 0 auto;
 }
 
-#tableGridA {
+#table-grid-a {
     float: left;
     opacity: 50%;
 }
 
-#tableGridB {
+#table-grid-b {
     float:right;
 }
 
-#headingA{
+#heading-a{
     width: 50%;
     text-align: left;
     float: left;
 }
 
-#headingB{
+#heading-b{
     width: 50%;
     text-align: right;
     float: right;

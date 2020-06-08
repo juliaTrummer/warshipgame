@@ -3,12 +3,13 @@ $(function () {
 
     var username = null;
     var formControl = $('.form-control');
-    var gridA = $('#tableGridA');
-    var gridB = $('#tableGridB');
+    var gridA = $('#table-grid-a');
+    var gridB = $('#table-grid-b');
     var submitButton = $('#submitButton');
-    var headingA = $('#headingA');
-    var headingB = $('#headingB');
-    var inputField = $('#nameInput')
+    var headingA = $('#heading-a');
+    var headingB = $('#heading-b');
+    var inputField = $('#name-input')
+    var waitingText = $('#wait-text')
     var gridArray = new Array(100).fill(-1);
 
     //---websocket---
@@ -20,7 +21,7 @@ $(function () {
     }
     //TODO: heroku host
     var host = location.origin.replace(/^http/, 'ws')
-   // var host = 'ws://127.0.0.1:5000' - localhost:5000
+    //var host = 'ws://127.0.0.1:5000' //- localhost:5000
     var ws = new WebSocket(host);
 
     ws.onopen = function () {
@@ -33,11 +34,29 @@ $(function () {
 
 
     ws.onmessage = function (message) {
-        console.log('Message received', message.data)
         try {
             var json = JSON.parse(message.data);
-            headingB.text(json.data.username+"'s table")
-            console.log('Hello %s!', json.data.username)
+
+            switch (json.type) {
+                case "username":
+                    headingB.text(json.data.username + "'s table")
+                    console.log('Hello %s!', json.data.username)
+                    break
+                case "clients":
+                    if(json.data.number === 2){
+                        inputField.addClass("input-group").removeClass("input-group-hidden")
+                        waitingText.addClass("waiting-text-hidden").waitingText.removeClass("waiting-text")
+                    } else if(json.data.number > 2) {
+                        inputField.removeClass("input-group").addClass("input-group-hidden")
+                        waitingText.addClass("waiting-text").removeClass("waitin-text-hidden").text("There is already a game going on. Please try again later!");
+                    } else {
+                        inputField.removeClass("input-group").addClass("input-group-hidden")
+                        waitingText.addClass("waiting-text").removeClass("waiting-text-hidden")
+                    }
+                    break
+                default:
+                    break
+            }
         } catch (e) {
             console.log('Invalid JSON: ', message.data);
             return;
@@ -69,16 +88,16 @@ $(function () {
             var row = $('<tr>');
             for (var j = 0; j < 12; j++) {
                 if ((j === 0 || j === 11) && (i !== 0 && i !== 11)) {
-                    var cell = $('<td>').addClass('tableCell numbering').text(alphabet[i - 1]);
+                    var cell = $('<td>').addClass('table-cell numbering').text(alphabet[i - 1]);
                 } else if ((i === 0 || i === 11) && (j !== 0 && j !== 11)) {
-                    var cell = $('<td>').addClass('tableCell numbering').text(j);
+                    var cell = $('<td>').addClass('table-cell  numbering').text(j);
                 } else if (((i === 0 || i === 11) && (j == 0 || j == 11)) || ((j === 0 || j === 11) && (i == 0 || i == 11))) {
                     var cell = $('<td>');
                 } else {
                     if (idType === "A") {
-                        var cell = $('<td>').addClass('tableCell field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id + idType).attr('disabled', 'disabled');
+                        var cell = $('<td>').addClass('table-cell  field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id + idType).attr('disabled', 'disabled');
                     } else {
-                        var cell = $('<td>').addClass('tableCell field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id + idType)
+                        var cell = $('<td>').addClass('table-cell  field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id + idType)
                     }
                     id++;
                 }
@@ -118,7 +137,7 @@ $(function () {
     function onSubmit() {
         username = formControl.val();
         headingA.text(formControl.val() + "'s Table")
-        ws.send(username) 
+        ws.send(username)
         formControl.val("");
         submitButton.prop('disabled', true);
 
