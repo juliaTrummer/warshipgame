@@ -43,10 +43,10 @@ $(function () {
                     console.log('Hello %s!', json.data.username)
                     break
                 case "clients":
-                    if(json.data.number === 2){
+                    if (json.data.number === 2) {
                         inputField.addClass("input-group").removeClass("input-group-hidden")
                         waitingText.addClass("waiting-text-hidden").waitingText.removeClass("waiting-text")
-                    } else if(json.data.number > 2) {
+                    } else if (json.data.number > 2) {
                         inputField.removeClass("input-group").addClass("input-group-hidden")
                         waitingText.addClass("waiting-text").removeClass("waitin-text-hidden").text("There is already a game going on. Please try again later!");
                     } else {
@@ -81,7 +81,7 @@ $(function () {
     function createTable(gridType, idType) {
         var tableBody = gridType;
         var alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-        var id = 1;
+        var id = 0;
 
         for (var i = 0; i < 12; i++) {
 
@@ -110,7 +110,6 @@ $(function () {
 
     //interaction with table
     function onCellClick(id) {
-        getRandomInt()
         if ($('#' + id).attr('disabled') === 'disabled') {
             return;
         }
@@ -148,17 +147,59 @@ $(function () {
     }
 
     function generateRandomShips() {
-        //1 x 4 cells
+        var shipLenghts = [5, 4, 3, 2]
+        var numberOfShips = [1, 1, 2, 1]
 
-        //2 x 3 cells
+        for (var i = 0; i < shipLenghts.length; i++) {
+            var direction = getRandomInt(1, 2)
 
-        //3 x 2 cells
+            for (var j = 0; j < numberOfShips[i]; j++) {
+                var startCell = ""
+                var endCell = ""
 
-        //4 x 1 cells
+                if (direction === 1) { //horizontal 
+                    do {
+                        var row = getRandomInt(1, 10)
+                        var col = getRandomInt(1, 10 - shipLenghts[i] + 1)
+                        startCell = parseInt("" + (row - 1) + (col - 1)) //minus 1 bc of randomgenerator
+                        endCell = startCell + shipLenghts[i]
+                    } while (!areCellsFree(startCell, endCell, 1));
+                } else { //vertical
+                    do {
+                        var row = getRandomInt(1, 10 - shipLenghts[i] + 1)
+                        var col = getRandomInt(1, 10)
+                        startCell = parseInt("" + (row - 1) + (col - 1))
+                        endCell = parseInt("" + (row - 1 + shipLenghts[i]) + (col - 1))
+                    } while (!areCellsFree(startCell, endCell, 10))
+                }
+            }
+        }
     }
 
-    function getRandomInt() {
-        return Math.floor(Math.random() * (100 * 1)) + 1;
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max * min)) + min;
+    }
+
+    function areCellsFree(start, end, increment) {
+        var testGrid = gridArray
+        for (var i = start; i < end; i += increment) {
+            if (gridArray[i] === -1) {
+                testGrid[i] = 1
+            } else {
+                return false
+            }
+        }
+
+        gridArray = testGrid
+        setShips(start, end, increment)
+        return true
+    }
+
+    function setShips(start, end, increment) {
+        for (var i = start; i < end; i += increment) {
+            $('#id' + i + "A").append($('<i>').addClass('material-icons').text('directions_boat'));
+            $('#id' + i + "A").attr('disabled', 'disabled');
+        }
     }
 
 });

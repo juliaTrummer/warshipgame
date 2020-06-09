@@ -44,20 +44,19 @@ wss.on('request',function(request){
     var connection = request.accept(null, request.origin);
     var index = clients.push(connection) - 1;
     var clientNumber = {
-        number: clients.length
+        "number": clients.length
     }
 
    if(clients.length > 2){       
-        wss.broadCastSender(JSON.stringify({type: 'clients', data: clientNumber}), connection)
+        wss.broadCastSender(JSON.stringify({"type": 'clients', "data": clientNumber}), connection)
    } else {
-        wss.broadcast(JSON.stringify({type: 'clients', data: clientNumber}), connection, true)
+        wss.broadcast(JSON.stringify({"type": 'clients', "data": clientNumber}), connection, true)
    }
    
 
     //TODO: different kinds of messages
     //https://stackoverflow.com/questions/7543804/websockets-how-to-create-different-messages
     connection.on('message', function(message){
-        //console.log('message ', message.type)
         if (message.type === 'utf8') { 
             var obj = {
               time: (new Date()).getTime(),
@@ -72,7 +71,7 @@ wss.on('request',function(request){
     connection.on('close', function(connection){
         clients.splice(index, 1);
         console.log('connection closed :(')
-        clientNumber['number'] = clients.length
+        clientNumber["number"] = clients.length
         wss.broadcast(JSON.stringify({type: 'clients', data: clientNumber}), connection, true)
     })
 })
