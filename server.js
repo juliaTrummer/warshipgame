@@ -11,12 +11,15 @@ app.use(bodyParser.json());
 const db = require('./app/config/db.config.js');
 const User = db.users;
 
-app.use(express.static('client'));
+server.get("/", function (req, res) {
+    res.render("index");
+})
 
-app.use(express.static(__dirname + "/"));
+server.listen(port, function(){
+    console.log('Server is now listening to: ', port)
+})
 
-var server = http.createServer(app);
-server.listen(port);
+const wsServer = new Server({server})
 
 console.log("Server listening on port: %d", port);
 
