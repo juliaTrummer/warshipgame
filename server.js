@@ -8,9 +8,6 @@ var clients = [ ];
 
 app.use(bodyParser.json());
 
-const db = require('./app/config/db.config.js');
-const User = db.users;
-
 app.use(express.static('client'));
 
 app.use(express.static(__dirname + "/"));
