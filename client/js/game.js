@@ -39,26 +39,16 @@ $(function () {
 
             switch (json.type) {
                 case "username":
-                    headingB.text(json.data.username + "'s table")
-                    console.log('Hello %s!', json.data.username)
+                    userNameMessage(json.data.username)
                     break
                 case "clients":
-                    if (json.data.number === 2) {
-                        inputField.addClass("input-group").removeClass("input-group-hidden")
-                        waitingText.addClass("waiting-text-hidden").waitingText.removeClass("waiting-text")
-                    } else if (json.data.number > 2) {
-                        inputField.removeClass("input-group").addClass("input-group-hidden")
-                        waitingText.addClass("waiting-text").removeClass("waitin-text-hidden").text("There is already a game going on. Please try again later!");
-                    } else {
-                        inputField.removeClass("input-group").addClass("input-group-hidden")
-                        waitingText.addClass("waiting-text").removeClass("waiting-text-hidden")
-                    }
+                    clientMessage(json.data.number)
                     break
                 default:
                     break
             }
         } catch (e) {
-            console.log('Invalid JSON: ', message.data);
+            console.log('Error parsing JSON: ', e);
             return;
         }
     };
@@ -68,6 +58,24 @@ $(function () {
             console.log('Unable to communicate with the WebSocket server.')
         }
     }, 3000);
+
+    function userNameMessage(username) {
+        headingB.text(username + "'s table")
+        console.log('Hello %s!', username)
+    }
+
+    function clientMessage(userNumber) {
+        if (userNumber === 2) {
+            inputField.addClass("input-group").removeClass("input-group-hidden")
+            waitingText.addClass("waiting-text-hidden").removeClass("waiting-text")
+        } else if (userNumber > 2) {
+            inputField.removeClass("input-group").addClass("input-group-hidden")
+            waitingText.addClass("waiting-text").removeClass("waitin-text-hidden").text("There is already a game going on. Please try again later!");
+        } else {
+            inputField.removeClass("input-group").addClass("input-group-hidden")
+            waitingText.addClass("waiting-text").removeClass("waiting-text-hidden")
+        }
+    }
 
 
 

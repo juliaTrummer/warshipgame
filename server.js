@@ -53,8 +53,8 @@ wss.on('request',function(request){
     connection.on('message', function(message){
         if (message.type === 'utf8') {
             var obj = {
-                time: (new Date()).getTime(),
-                username:message.utf8Data,
+                time: (new Date()).getTime(), //TODO: delete time
+                username:message.utf8Data, 
             };
 
             var json = JSON.stringify({type: 'username', data: obj});
@@ -72,7 +72,6 @@ wss.on('request',function(request){
 
 //https://stackoverflow.com/questions/35535700/websockets-send-messages-and-notifications-to-all-clients-except-sender
 wss.broadcast = function(data, sender, clientNumber){
-    console.log('broadcast', clientNumber, data)
     if(clientNumber){
         clients.forEach(function(client) {
             client.sendUTF(data)
