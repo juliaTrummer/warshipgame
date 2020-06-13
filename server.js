@@ -66,25 +66,25 @@ wss.on("connection", function (ws) {
     ws.on("close", function () {
         console.log("websocket connection close");
     })
-})
+});
 
 wss.on("message", function (message) {
     console.log('message', message.utf8Data)
-})
+});
 
 wss.on('request', function (request) {
-    console.log('Connection from origin ' + request.origin)
+    console.log('Connection from origin ' + request.origin);
     var connection = request.accept(null, request.origin);
     var index = clients.push(connection) - 1;
 
     var clientNumber = {
         "number": clients.length
-    }
+    };
 
     if (clients.length > 2) {
         wss.broadcastSender(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
     } else if (clients.length === 2) {
-        wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+        wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection);
         currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
         wss.broadcastTurn(currentPlayer)
     } else {
@@ -120,27 +120,27 @@ wss.on('request', function (request) {
                             isShip: json.data.isShip
                         }
                     }
-                    wss.broadcastSpecific(JSON.stringify(checkCellResultMsg), clients[currentPlayer])
+                    wss.broadcastSpecific(JSON.stringify(checkCellResultMsg), clients[currentPlayer]);
                     //one player lost and game is over
                     if (json.data.isShip && json.data.foundShipCounter === 16) {
                         var lossMsg = {
                             type: "loss"
-                        }
-                        wss.broadcastSpecific(JSON.stringify(lossMsg), clients[currentPlayer === 0 ? 1 : 0])
+                        };
+                        wss.broadcastSpecific(JSON.stringify(lossMsg), clients[currentPlayer === 0 ? 1 : 0]);
                         setTimeout(function () {
                             var resetMsg = {
                                 type: "reset"
-                            }
-                            wss.broadcast(JSON.stringify(resetMsg))
+                            };
+                            wss.broadcast(JSON.stringify(resetMsg));
 
                             clientNumber = {
                                 "number": clients.length
-                            }
+                            };
 
                             if (clients.length > 2) {
                                 wss.broadcastSender(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
                             } else if (clients.length === 2) {
-                                wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+                                wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection);
                                 currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
                                 wss.broadcastTurn(currentPlayer)
                             } else {
@@ -167,33 +167,33 @@ wss.on('request', function (request) {
 
         }
 
-    })
+    });
 
     connection.on('close', function (connection) {
         clients.splice(index, 1);
         console.log('connection closed :(')
-        clientNumber["number"] = clients.length
+        clientNumber["number"] = clients.length;
         var resetMsg = {
             type: "reset"
-        }
+        };
 
-        wss.broadcast(JSON.stringify(resetMsg))
+        wss.broadcast(JSON.stringify(resetMsg));
 
         if (index < 2) {
             var closeMsg = {
                 type: 'close'
-            }
+            };
             wss.broadcastSpecific(JSON.stringify(closeMsg), clients[0])
         }
 
         clientNumber = {
             "number": clients.length
-        }
+        };
 
         if (clients.length > 2) {
             wss.broadcastSender(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
         } else if (clients.length === 2) {
-            wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+            wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection);
             currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
             wss.broadcastTurn(currentPlayer)
         } else {
@@ -201,7 +201,7 @@ wss.on('request', function (request) {
         }
 
     })
-})
+});
 
 //https://stackoverflow.com/questions/35535700/websockets-send-messages-and-notifications-to-all-clients-except-sender
 //message to all clients
@@ -209,7 +209,7 @@ wss.broadcast = function (data) {
     clients.forEach(function (client) {
         client.sendUTF(data)
     })
-}
+};
 
 //message to all clients but NOT the sender
 wss.broadcastRecipients = function (data, sender) {
@@ -218,7 +218,7 @@ wss.broadcastRecipients = function (data, sender) {
             client.sendUTF(data)
         }
     })
-}
+};
 
 //message only to sender
 wss.broadcastSender = function (data, sender) {
@@ -227,14 +227,14 @@ wss.broadcastSender = function (data, sender) {
             client.sendUTF(data)
         }
     })
-}
+};
 
 //message only to one specific
 wss.broadcastSpecific = function (data, client) {
     client.sendUTF(data)
-}
+};
 
 wss.broadcastTurn = function (currentPlayer) {
-    wss.broadcastSpecific(JSON.stringify({ "type": "yourTurn" }), clients[currentPlayer])
+    wss.broadcastSpecific(JSON.stringify({ "type": "yourTurn" }), clients[currentPlayer]);
     wss.broadcastSpecific(JSON.stringify({ "type": "opponentsTurn" }), clients[currentPlayer === 0 ? 1 : 0])
-}
+};

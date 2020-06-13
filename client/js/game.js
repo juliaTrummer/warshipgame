@@ -8,33 +8,33 @@ $(function () {
     var submitButton = $('#submitButton');
     var headingA = $('#heading-a');
     var headingB = $('#heading-b');
-    var inputField = $('#name-input')
-    var waitingText = $('#wait-text')
+    var inputField = $('#name-input');
+    var waitingText = $('#wait-text');
     var gridArray = new Array(100).fill(-1);
-    var opponentName = ""
+    var opponentName = "";
     var turnText = $('#turn-text');
-    var triedCells = []
-    var foundShipCounter = 0
+    var triedCells = [];
+    var foundShipCounter = 0;
 
     //---websocket---
     window.WebSocket = window.WebSocket || window.MozWebSocket;
 
     if (!window.WebSocket) {
-        console.log('Sorry, your browser does not support websockets')
+        console.log('Sorry, your browser does not support websockets');
         return;
     }
     //TODO: heroku host
-    var host = location.origin.replace(/^http/, 'ws')
+    var host = location.origin.replace(/^http/, 'ws');
     //var host = 'ws://127.0.0.1:5000' //- localhost:5000
     var ws = new WebSocket(host);
 
     ws.onopen = function () {
         console.log("Websocket opened")
-    }
+    };
 
     ws.onerror = function (error) {
         console.log('Sorry, there is a problem with the connection.')
-    }
+    };
 
 
     ws.onmessage = function (message) {
@@ -43,36 +43,36 @@ $(function () {
 
             switch (json.type) {
                 case "username":
-                    onUserNameMessage(json.data.username)
-                    break
+                    onUserNameMessage(json.data.username);
+                    break;
                 case "clients":
-                    onClientMessage(json.data.number)
-                    break
+                    onClientMessage(json.data.number);
+                    break;
                 case "yourTurn":
-                    onYourTurn()
-                    break
+                    onYourTurn();
+                    break;
                 case "opponentsTurn":
-                    onOpponentsTurn()
-                    break
+                    onOpponentsTurn();
+                    break;
                 //FIXME:____________test code________________
                 case "checkCell":
-                    console.log('check cell')
-                    onCheckCell(json.data)
-                    break
+                    console.log('check cell');
+                    onCheckCell(json.data);
+                    break;
                 case "checkCellResult":
-                    console.log('check cell result', json.data)
-                    onCheckCellResult(json.data)
-                    break
+                    console.log('check cell result', json.data);
+                    onCheckCellResult(json.data);
+                    break;
                 //__________________________________
                 case "loss":
-                    turnText.text("You have lost! Next game starts in 10sec.")
-                    break
+                    turnText.text("You have lost! Next game starts in 10sec.");
+                    break;
                 case "reset":
-                    resetGame()
-                    break
+                    resetGame();
+                    break;
                 case "close":
-                    alert("Unfortunately your opponent logged of...")
-                    break
+                    alert("Unfortunately your opponent logged of...");
+                    break;
                 default:
                     break
             }
@@ -89,21 +89,21 @@ $(function () {
     }, 3000);
 
     function resetGame() {
-        username = ""
+        username = "";
         gridArray = new Array(100).fill(-1);
-        opponentName = ""
-        triedCells = []
-        foundShipCounter = 0
+        opponentName = "";
+        triedCells = [];
+        foundShipCounter = 0;
 
         for (var i = 0; i < 100; i++) {
-            $("#" + i + "B").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '')
+            $("#" + i + "B").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '');
             $("#" + i + "A").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '')
         }
         //turnText.addClass('centered-text-hidden')
-        gridB.addClass("disabled-look")
-        headingB.text("Your opponent's table")
-        headingA.text('Your table')
-        turnText.addClass('centered-text-hidden').removeClass('centered-text')
+        gridB.addClass("disabled-look");
+        headingB.text("Your opponent's table");
+        headingA.text('Your table');
+        turnText.addClass('centered-text-hidden').removeClass('centered-text');
         generateRandomShips()
     }
 
@@ -127,7 +127,7 @@ $(function () {
     function onCheckCellResult(data) {
         if (data.isShip) {
             $('#' + data.cell).append($('<i>').addClass('material-icons').text('directions_boat'));
-            $('#' + data.cell).css('background-color', '#7FFF00')
+            $('#' + data.cell).css('background-color', '#7FFF00');
             foundShipCounter++
         } else {
             $('#' + data.cell).append($('<i>').addClass('material-icons').text('clear'));
@@ -135,45 +135,45 @@ $(function () {
         }
         $('#' + data.cell).attr('disabled', 'disabled');
 
-        triedCells.push(data.cell)
+        triedCells.push(data.cell);
 
         if (foundShipCounter === 17) {
-            turnText.text("You have won! Next game starts in 10sec.")
+            turnText.text("You have won! Next game starts in 10sec.");
             disableCells()
         }
 
     }
 
     function onYourTurn() {
-        enableCells()
-        turnText.addClass('centered-text').removeClass('centered-text-hidden')
+        enableCells();
+        turnText.addClass('centered-text').removeClass('centered-text-hidden');
         turnText.text("It's your turn!")
     }
 
     function onOpponentsTurn() {
-        disableCells()
-        turnText.addClass('centered-text').removeClass('centered-text-hidden')
+        disableCells();
+        turnText.addClass('centered-text').removeClass('centered-text-hidden');
         turnText.text("It's your opponent's turn!")
     }
 
     function onUserNameMessage(username) {
-        headingB.text(username + "'s table")
-        opponentName = username
+        headingB.text(username + "'s table");
+        opponentName = username;
         console.log('Hello %s!', username)
     }
 
     function onClientMessage(userNumber) {
         if (userNumber === 2) {
-            inputField.addClass("input-group").removeClass("input-group-hidden")
-            waitingText.addClass("centered-text-hidden").removeClass("centered-text")
+            inputField.addClass("input-group").removeClass("input-group-hidden");
+            waitingText.addClass("centered-text-hidden").removeClass("centered-text");
             enableCells()
             //TODO: make clickable after usernames!
         } else if (userNumber > 2) {
-            inputField.removeClass("input-group").addClass("input-group-hidden")
+            inputField.removeClass("input-group").addClass("input-group-hidden");
             waitingText.addClass("centerd-text").removeClass("centered-text-hidden").text("There is already a game going on. Please try again later!");
             disableCells()
         } else {
-            inputField.removeClass("input-group").addClass("input-group-hidden")
+            inputField.removeClass("input-group").addClass("input-group-hidden");
             waitingText.addClass("centered-text").removeClass("centered-text-hidden")
         }
     }
@@ -265,14 +265,14 @@ $(function () {
 
     function onSubmit() {
         username = formControl.val();
-        headingA.text(formControl.val() + "'s Table")
+        headingA.text(formControl.val() + "'s Table");
         var msg = {
             type: "username",
             data: {
                 name: username
             }
-        }
-        ws.send(JSON.stringify(msg))
+        };
+        ws.send(JSON.stringify(msg));
         formControl.val("");
         submitButton.prop('disabled', true);
 
@@ -283,28 +283,28 @@ $(function () {
     }
 
     function generateRandomShips() {
-        var shipLenghts = [5, 4, 3, 2]
-        var numberOfShips = [1, 1, 2, 1]
+        var shipLenghts = [5, 4, 3, 2];
+        var numberOfShips = [1, 1, 2, 1];
 
         for (var i = 0; i < shipLenghts.length; i++) {
-            var direction = getRandomInt(1, 2)
+            var direction = getRandomInt(1, 2);
 
             for (var j = 0; j < numberOfShips[i]; j++) {
-                var startCell = ""
-                var endCell = ""
+                var startCell = "";
+                var endCell = "";
 
                 if (direction === 1) { //horizontal
                     do {
-                        var row = getRandomInt(1, 10)
-                        var col = getRandomInt(1, 10 - shipLenghts[i] + 1)
-                        startCell = parseInt("" + (row - 1) + (col - 1)) //minus 1 bc of randomgenerator
+                        var row = getRandomInt(1, 10);
+                        var col = getRandomInt(1, 10 - shipLenghts[i] + 1);
+                        startCell = parseInt("" + (row - 1) + (col - 1)); //minus 1 bc of randomgenerator
                         endCell = startCell + shipLenghts[i]
                     } while (!areCellsFree(startCell, endCell, 1));
                 } else { //vertical
                     do {
-                        var row = getRandomInt(1, 10 - shipLenghts[i] + 1)
-                        var col = getRandomInt(1, 10)
-                        startCell = parseInt("" + (row - 1) + (col - 1))
+                        var row = getRandomInt(1, 10 - shipLenghts[i] + 1);
+                        var col = getRandomInt(1, 10);
+                        startCell = parseInt("" + (row - 1) + (col - 1));
                         endCell = parseInt("" + (row - 1 + shipLenghts[i]) + (col - 1))
                     } while (!areCellsFree(startCell, endCell, 10))
                 }
@@ -326,8 +326,8 @@ $(function () {
             }
         }
 
-        gridArray = testGrid
-        setShips(start, end, increment)
+        gridArray = testGrid;
+        setShips(start, end, increment);
         return true
     }
 
