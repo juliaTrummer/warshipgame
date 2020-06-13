@@ -1,7 +1,7 @@
 $(function () {
     "use strict";
 
-    var username = null;
+    var username = "";
     var formControl = $('.form-control');
     var gridA = $('#table-grid-a');
     var gridB = $('#table-grid-b');
@@ -11,6 +11,10 @@ $(function () {
     var inputField = $('#name-input')
     var waitingText = $('#wait-text')
     var gridArray = new Array(100).fill(-1);
+    var opponentName = ""
+    var turnText = $('#turn-text');
+    var triedCells = []
+    var foundShipCounter = 0
 
     //---websocket---
     window.WebSocket = window.WebSocket || window.MozWebSocket;
@@ -21,7 +25,7 @@ $(function () {
     }
     //TODO: heroku host
     var host = location.origin.replace(/^http/, 'ws')
-    //var host = 'ws://127.0.0.1:5000' //- localhost:5000
+   // var host = 'ws://127.0.0.1:5000' //- localhost:5000
     var ws = new WebSocket(host);
 
     ws.onopen = function () {
@@ -39,10 +43,28 @@ $(function () {
 
             switch (json.type) {
                 case "username":
-                    userNameMessage(json.data.username)
+                    onUserNameMessage(json.data.username)
                     break
                 case "clients":
-                    clientMessage(json.data.number)
+                    onClientMessage(json.data.number)
+                    break
+                case "yourTurn":
+                    onYourTurn()
+                    break
+                case "opponentsTurn":
+                    onOpponentsTurn()
+                    break
+                //FIXME:____________test code________________
+                case "checkCell":
+                    onCheckCell(json.data)
+                    break
+                case "checkCellResult":
+                    console.log('check cell result', json.data)
+                    onCheckCellResult(json.data)
+                    break
+                    //__________________________________
+                case "loss":
+                    turnText.text("You have lost!")
                     break
                 default:
                     break
@@ -59,25 +81,93 @@ $(function () {
         }
     }, 3000);
 
-    function userNameMessage(username) {
+
+    //FIXME: test code
+    function onCheckCell(data){
+        var result = gridArray[data.cell.slice(0,-1)] === 1 ? true : false;
+        var msg = {
+            type: "checkCellResult",
+            data:{
+                cell: data.cell,
+                isShip: result,
+                foundShipCounter: data.foundShipCounter
+            }
+        }
+
+        ws.send(JSON.stringify(msg))
+    }
+
+    //FIXME: test code
+    function onCheckCellResult(data){
+        console.log('isShip', data.isShip)
+        if(data.isShip){
+            $('#' + data.cell).append($('<i>').addClass('material-icons').text('directions_boat'));
+            $('#' + data.cell).css('background-color', '#7FFF00')
+            foundShipCounter++
+        } else {
+            $('#' + data.cell).append($('<i>').addClass('material-icons').text('clear'));
+            $('#' + data.cell).css('background-color', '#FF0000')
+        }
+        $('#' + data.cell).attr('disabled', 'disabled');
+
+        triedCells.push(data.cell)
+        
+        if(foundShipCounter === 17){
+            turnText.text("You have won!")
+            disableCells()
+        }
+        
+    }
+
+    function onYourTurn(){
+        enableCells()
+        turnText.addClass('centered-text').removeClass('centered-text-hidden')
+        turnText.text("It's your turn!")
+    }
+
+    function onOpponentsTurn(){
+        disableCells()
+        turnText.addClass('centered-text').removeClass('centered-text-hidden')
+        turnText.text("It's your opponent's turn!")
+    }
+
+    function onUserNameMessage(username) {
         headingB.text(username + "'s table")
+        opponentName = username
         console.log('Hello %s!', username)
     }
 
-    function clientMessage(userNumber) {
+    function onClientMessage(userNumber) {
         if (userNumber === 2) {
             inputField.addClass("input-group").removeClass("input-group-hidden")
-            waitingText.addClass("waiting-text-hidden").removeClass("waiting-text")
+            waitingText.addClass("centered-text-hidden").removeClass("centered-text")
+            enableCells()
+            //TODO: make clickable after usernames! 
         } else if (userNumber > 2) {
             inputField.removeClass("input-group").addClass("input-group-hidden")
-            waitingText.addClass("waiting-text").removeClass("waitin-text-hidden").text("There is already a game going on. Please try again later!");
+            waitingText.addClass("centerd-text").removeClass("centered-text-hidden").text("There is already a game going on. Please try again later!");
+            disableCells()
         } else {
             inputField.removeClass("input-group").addClass("input-group-hidden")
-            waitingText.addClass("waiting-text").removeClass("waiting-text-hidden")
+            waitingText.addClass("centered-text").removeClass("centered-text-hidden")
         }
     }
 
+    function disableCells(){
+        for(var i = 0; i < 100; i++){
+            $("#"+i+"B").attr('disabled', 'disabled')
+        }
+        gridB.addClass("disabled-look")
+    }
 
+    function enableCells(){
+        for(var i = 0; i < 100; i++){
+            if(triedCells.find(element => element === i+"B") === undefined){
+                $("#"+i+"B").removeAttr('disabled')
+            }
+        }
+        gridB.removeClass("disabled-look")
+    }
 
     //table
     $(document).ready(function () {
@@ -103,9 +193,9 @@ $(function () {
                     var cell = $('<td>');
                 } else {
                     if (idType === "A") {
-                        var cell = $('<td>').addClass('table-cell  field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id + idType).attr('disabled', 'disabled');
+                        var cell = $('<td>').addClass('table-cell  field').click(function () { onCellClick($(this).attr('id')) }).attr('id', id + idType).attr('disabled', 'disabled');
                     } else {
-                        var cell = $('<td>').addClass('table-cell  field').click(function () { onCellClick($(this).attr('id')) }).attr('id', 'id' + id + idType)
+                        var cell = $('<td>').addClass('table-cell  field').click(function () { onCellClick($(this).attr('id')) }).attr('id', id + idType).attr('disabled', 'disabled');
                     }
                     id++;
                 }
@@ -121,9 +211,17 @@ $(function () {
         if ($('#' + id).attr('disabled') === 'disabled') {
             return;
         }
-        $('#' + id).append($('<i>').addClass('material-icons').text('directions_boat'));
-        $('#' + id).attr('disabled', 'disabled');
+
         console.log('clicked on cell: ' + id);
+        var msg= {
+            type: "clickedCell",
+            data:{
+                cell: id,
+                foundShipCounter: foundShipCounter
+            }
+        }
+        console.log('clicked cell', msg)
+        ws.send(JSON.stringify(msg))
     }
 
     //username input
@@ -144,7 +242,13 @@ $(function () {
     function onSubmit() {
         username = formControl.val();
         headingA.text(formControl.val() + "'s Table")
-        ws.send(username)
+        var msg = {
+            type: "username",
+            data:{
+                name: username
+            }
+        }
+        ws.send(JSON.stringify(msg))
         formControl.val("");
         submitButton.prop('disabled', true);
 
@@ -205,8 +309,8 @@ $(function () {
 
     function setShips(start, end, increment) {
         for (var i = start; i < end; i += increment) {
-            $('#id' + i + "A").append($('<i>').addClass('material-icons').text('directions_boat'));
-            $('#id' + i + "A").attr('disabled', 'disabled');
+            $('#'+ i + "A").append($('<i>').addClass('material-icons').text('directions_boat'));
+            $('#' + i + "A").attr('disabled', 'disabled');
         }
     }
 
