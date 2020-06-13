@@ -25,7 +25,7 @@ $(function () {
     }
     //TODO: heroku host
     var host = location.origin.replace(/^http/, 'ws')
-   // var host = 'ws://127.0.0.1:5000' //- localhost:5000
+    //var host = 'ws://127.0.0.1:5000' //- localhost:5000
     var ws = new WebSocket(host);
 
     ws.onopen = function () {
@@ -56,15 +56,22 @@ $(function () {
                     break
                 //FIXME:____________test code________________
                 case "checkCell":
+                    console.log('check cell')
                     onCheckCell(json.data)
                     break
                 case "checkCellResult":
                     console.log('check cell result', json.data)
                     onCheckCellResult(json.data)
                     break
-                    //__________________________________
+                //__________________________________
                 case "loss":
-                    turnText.text("You have lost!")
+                    turnText.text("You have lost! Next game starts in 10sec.")
+                    break
+                case "reset":
+                    resetGame()
+                    break
+                case "close":
+                    alert("Unfortunately your opponent logged of...")
                     break
                 default:
                     break
@@ -81,13 +88,32 @@ $(function () {
         }
     }, 3000);
 
+    function resetGame() {
+        username = ""
+        gridArray = new Array(100).fill(-1);
+        opponentName = ""
+        triedCells = []
+        foundShipCounter = 0
+
+        for (var i = 0; i < 100; i++) {
+            $("#" + i + "B").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '')
+            $("#" + i + "A").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '')
+        }
+        //turnText.addClass('centered-text-hidden')
+        gridB.addClass("disabled-look")
+        headingB.text("Your opponent's table")
+        headingA.text('Your table')
+        turnText.addClass('centered-text-hidden').removeClass('centered-text')
+        generateRandomShips()
+    }
+
 
     //FIXME: test code
-    function onCheckCell(data){
-        var result = gridArray[data.cell.slice(0,-1)] === 1 ? true : false;
+    function onCheckCell(data) {
+        var result = gridArray[data.cell.slice(0, -1)] === 1 ? true : false;
         var msg = {
             type: "checkCellResult",
-            data:{
+            data: {
                 cell: data.cell,
                 isShip: result,
                 foundShipCounter: data.foundShipCounter
@@ -98,9 +124,8 @@ $(function () {
     }
 
     //FIXME: test code
-    function onCheckCellResult(data){
-        console.log('isShip', data.isShip)
-        if(data.isShip){
+    function onCheckCellResult(data) {
+        if (data.isShip) {
             $('#' + data.cell).append($('<i>').addClass('material-icons').text('directions_boat'));
             $('#' + data.cell).css('background-color', '#7FFF00')
             foundShipCounter++
@@ -111,21 +136,21 @@ $(function () {
         $('#' + data.cell).attr('disabled', 'disabled');
 
         triedCells.push(data.cell)
-        
-        if(foundShipCounter === 17){
-            turnText.text("You have won!")
+
+        if (foundShipCounter === 17) {
+            turnText.text("You have won! Next game starts in 10sec.")
             disableCells()
         }
-        
+
     }
 
-    function onYourTurn(){
+    function onYourTurn() {
         enableCells()
         turnText.addClass('centered-text').removeClass('centered-text-hidden')
         turnText.text("It's your turn!")
     }
 
-    function onOpponentsTurn(){
+    function onOpponentsTurn() {
         disableCells()
         turnText.addClass('centered-text').removeClass('centered-text-hidden')
         turnText.text("It's your opponent's turn!")
@@ -153,17 +178,17 @@ $(function () {
         }
     }
 
-    function disableCells(){
-        for(var i = 0; i < 100; i++){
-            $("#"+i+"B").attr('disabled', 'disabled')
+    function disableCells() {
+        for (var i = 0; i < 100; i++) {
+            $("#" + i + "B").attr('disabled', 'disabled')
         }
         gridB.addClass("disabled-look")
     }
 
-    function enableCells(){
-        for(var i = 0; i < 100; i++){
-            if(triedCells.find(element => element === i+"B") === undefined){
-                $("#"+i+"B").removeAttr('disabled')
+    function enableCells() {
+        for (var i = 0; i < 100; i++) {
+            if (triedCells.find(element => element === i + "B") === undefined) {
+                $("#" + i + "B").removeAttr('disabled')
             }
         }
         gridB.removeClass("disabled-look")
@@ -213,14 +238,13 @@ $(function () {
         }
 
         console.log('clicked on cell: ' + id);
-        var msg= {
+        var msg = {
             type: "clickedCell",
-            data:{
+            data: {
                 cell: id,
                 foundShipCounter: foundShipCounter
             }
         }
-        console.log('clicked cell', msg)
         ws.send(JSON.stringify(msg))
     }
 
@@ -244,7 +268,7 @@ $(function () {
         headingA.text(formControl.val() + "'s Table")
         var msg = {
             type: "username",
-            data:{
+            data: {
                 name: username
             }
         }
@@ -309,7 +333,7 @@ $(function () {
 
     function setShips(start, end, increment) {
         for (var i = start; i < end; i += increment) {
-            $('#'+ i + "A").append($('<i>').addClass('material-icons').text('directions_boat'));
+            $('#' + i + "A").append($('<i>').addClass('material-icons').text('directions_boat'));
             $('#' + i + "A").attr('disabled', 'disabled');
         }
     }

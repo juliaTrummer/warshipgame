@@ -8,14 +8,11 @@ var clients = [];
 var currentPlayer = ""
 
 app.use(bodyParser.json());
-
 app.use(express.static('client'));
-
 app.use(express.static(__dirname + "/"));
 
 var server = http.createServer(app);
 server.listen(port);
-
 console.log("Server listening on port: %d", port);
 
 var wss = new WebSocketServer({ httpServer: server });
@@ -35,9 +32,9 @@ wss.on("message", function (message) {
 
 wss.on('request', function (request) {
     console.log('Connection from origin ' + request.origin)
-
     var connection = request.accept(null, request.origin);
     var index = clients.push(connection) - 1;
+
     var clientNumber = {
         "number": clients.length
     }
@@ -59,38 +56,55 @@ wss.on('request', function (request) {
         if (message.type === 'utf8') {
 
             try {
-                var json = JSON.parse(message.utf8Data); //TODO: try catch json
-                console.log('Json', json)
+                var json = JSON.parse(message.utf8Data);
                 var type = json.type;
 
                 if (type === "clickedCell") {
                     //TODO: db
                     // FIXME. ____________________code for testing purposes_____________________________
-                    var msg = {
+                    var checkCellMsg = {
                         type: "checkCell",
                         data: {
                             cell: json.data.cell,
                             foundShipCounter: json.data.foundShipCounter
                         }
                     }
-                    wss.broadcastSpecific(JSON.stringify(msg), clients[currentPlayer === 0 ? 1 : 0])
-                    console.log('server: clicked cell')
-
+                    wss.broadcastSpecific(JSON.stringify(checkCellMsg), clients[currentPlayer === 0 ? 1 : 0])
                 } else if (type === "checkCellResult") {
-                    console.log('server: check cell result', json)
-                    var msg = {
+                    var checkCellResultMsg = {
                         type: "checkCellResult",
                         data: {
                             cell: json.data.cell,
                             isShip: json.data.isShip
                         }
                     }
-                    wss.broadcastSpecific(JSON.stringify(msg), clients[currentPlayer])
+                    wss.broadcastSpecific(JSON.stringify(checkCellResultMsg), clients[currentPlayer])
+                    //one player lost and game is over
                     if (json.data.isShip && json.data.foundShipCounter === 16) {
-                        var msg = {
+                        var lossMsg = {
                             type: "loss"
                         }
-                        wss.broadcastSpecific(JSON.stringify(msg), clients[currentPlayer === 0 ? 1 : 0])
+                        wss.broadcastSpecific(JSON.stringify(lossMsg), clients[currentPlayer === 0 ? 1 : 0])
+                        setTimeout(function () {
+                            var resetMsg = {
+                                type: "reset"
+                            }
+                            wss.broadcast(JSON.stringify(resetMsg))
+
+                            clientNumber = {
+                                "number": clients.length
+                            }
+
+                            if (clients.length > 2) {
+                                wss.broadcastSender(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+                            } else if (clients.length === 2) {
+                                wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+                                currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
+                                wss.broadcastTurn(currentPlayer)
+                            } else {
+                                wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+                            }
+                        }, 10000)
                     } else {
                         currentPlayer = currentPlayer === 0 ? 1 : 0;
                         wss.broadcastTurn(currentPlayer)
@@ -117,7 +131,33 @@ wss.on('request', function (request) {
         clients.splice(index, 1);
         console.log('connection closed :(')
         clientNumber["number"] = clients.length
-        wss.broadcast(JSON.stringify({ type: 'clients', data: clientNumber }))
+        var resetMsg = {
+            type: "reset"
+        }
+
+        wss.broadcast(JSON.stringify(resetMsg))
+
+        if (index < 2) {
+            var closeMsg = {
+                type: 'close'
+            }
+            wss.broadcastSpecific(JSON.stringify(closeMsg), clients[0])
+        }
+
+        clientNumber = {
+            "number": clients.length
+        }
+
+        if (clients.length > 2) {
+            wss.broadcastSender(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+        } else if (clients.length === 2) {
+            wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+            currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
+            wss.broadcastTurn(currentPlayer)
+        } else {
+            wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+        }
+
     })
 })
 
