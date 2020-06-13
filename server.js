@@ -18,7 +18,6 @@ app.use(express.static(__dirname + "/"));
 
 var server = http.createServer(app);
 
-var wss = new WebSocketServer({ httpServer: server });
 /*
 Gets Data from DB
 needs value = battleshipUsers | generatedShipFields | usedFields
@@ -61,6 +60,8 @@ function clear (tableName){
 app.listen(port, function () {
     console.log('Server is running on port 5000');
 });
+
+var wss = new WebSocketServer({ httpServer: server });
 
 var wss = new WebSocketServer({httpServer: server});
 console.log("Websocket server created");
