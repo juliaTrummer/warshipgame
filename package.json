@@ -23,9 +23,13 @@
     "sequelize": "^5.21.12",
     "utf-8-validate": "^5.0.2",
     "websocket": "^1.0.31",
-    "ws": "^7.3.0"
+    "ws": "^7.3.0",
+    "pg-connection-string": "latest"
   },
   "engines": {
     "node": "10.x"
+  },
+  "devDependencies": {
+    "pg-promise": "^10.5.6"
   }
 }
