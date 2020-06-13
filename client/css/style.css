@@ -39,13 +39,13 @@ table {
     display: none !important;
 }
 
-.waiting-text {
+.centered-text {
     text-align: center;
     width: 100% !important;
     margin-bottom: 30px;
 }
 
-.waiting-text-hidden {
+.centered-text-hidden {
     text-align: center;
     width: 100% !important;
     margin-bottom: 30px;
@@ -60,11 +60,14 @@ table {
 
 #table-grid-a {
     float: left;
-    opacity: 50%;
 }
 
 #table-grid-b {
     float:right;
+}
+
+.disabled-look {
+    opacity: 50%;
 }
 
 #heading-a{
