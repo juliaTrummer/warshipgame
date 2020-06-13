@@ -1,14 +1,13 @@
+const getData = require('./server/db_data/get');
+const postData = require('./server/db_data/post');
+const deleteData = require('./server/db_data/delete');
+const putData = require('./server/db_data/put');
 var WebSocketServer = require("websocket").server;
 var http = require("http");
 var express = require('express');
 var app = express();
 var port = process.env.PORT || 5000;
 var bodyParser = require('body-parser');
-var clients = [ ];
-const getData = require('./server/db_data/get');
-const postData = require('./server/db_data/post');
-const deleteData = require('./server/db_data/delete');
-const putData = require('./server/db_data/put');
 var clients = [];
 var currentPlayer = ""
 
@@ -60,8 +59,6 @@ function clear (tableName){
 app.listen(port, function () {
     console.log('Server is running on port 5000');
 });
-
-var wss = new WebSocketServer({ httpServer: server });
 
 var wss = new WebSocketServer({httpServer: server});
 console.log("Websocket server created");
@@ -241,6 +238,6 @@ wss.broadcastSpecific = function (data, client) {
 }
 
 wss.broadcastTurn = function (currentPlayer) {
-    wss.broadcastSpecific(JSON.stringify({ "type": "yourTurn" }), clients[currentPlayer])
+    wss.broadcastSpecific(JSON.stringify({ "type": "yourTurn" }), clients[currentPlayer]);
     wss.broadcastSpecific(JSON.stringify({ "type": "opponentsTurn" }), clients[currentPlayer === 0 ? 1 : 0])
 }
