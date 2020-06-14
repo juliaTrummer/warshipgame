@@ -9,7 +9,7 @@ var app = express();
 var port = process.env.PORT || 5000;
 var bodyParser = require('body-parser');
 var clients = [];
-var currentPlayer = ""
+var currentPlayer = "";
 
 app.use(bodyParser.json());
 app.use(express.static('client'));
@@ -18,10 +18,11 @@ app.use(express.static(__dirname + "/"));
 /*
 Gets Data from DB
 needs value = battleshipUsers | generatedShipFields | usedFields
-get('battleshipUsers')
+EXAMPLE: get('battleshipUsers')
  */
-function get(tableName){
-    const data = getData(tableName);
+async function get(tableName, clientId){
+    const data = await getData(tableName, clientId);
+    return data;
 }
 
 /*
@@ -30,8 +31,8 @@ needs tablename and value to insert
 EXAMPLE: post('battleshipUsers', 'Julia');
 https://restfulapi.net/rest-put-vs-post/
  */
-function post(tableName, value){
-    const data = postData(tableName, value);
+function post(tableName, value, value2){
+    postData(tableName, value, value2);
 }
 
 /*
@@ -41,7 +42,7 @@ EXAMPLE: put ('battleshipUsers', 'Lea', 'userName', 'Julia', 'userName');
 https://restfulapi.net/rest-put-vs-post/
  */
 function put(tableName, val1, col1, val2, col2){
-    const data = putData(tableName, val1, col1, val2, col2);
+    putData(tableName, val1, col1, val2, col2);
 }
 
 /*
@@ -50,8 +51,42 @@ needs tableName
 EXAMPLE: clear('battleshipUsers');
  */
 function clear (tableName){
-    const data = deleteData(tableName);
+    deleteData(tableName);
 }
+
+/*
+-------Users----------
+ */
+function setUserData(username, clientId){
+    post('battleshipUsers', username, clientId)
+}
+
+async function getUserData(){
+    var users = await get('battleshipUsers');
+    console.log(users);
+}
+
+/*
+--------Fields---------
+ */
+async function getGeneratedBattleshipFields(){
+    var battleshipFields = await get('generatedShipFields');
+    console.log(battleshipFields);
+}
+
+async function setGeneratedBattleshipFields(array){
+    for(let i in array){
+        if(i == 0){
+
+        }
+    }
+}
+
+async function getUserSpecificFields(clientId){
+    var userFields = await get('generatedShipFields', '23asdf4bcd');
+    console.log(userFields)
+}
+
 
 var server = http.createServer(app);
 server.listen(port);
