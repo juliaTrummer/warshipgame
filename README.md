@@ -1,5 +1,5 @@
 # Battleship Game
-This is a project for the lecture Webservice Development SS2020.
+This is a project for the lecture Webservice Development SS2020.  
 For further information read the documentation or contact one of the contributers.
 
 ## Game Rules
