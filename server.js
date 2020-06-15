@@ -50,6 +50,7 @@ TODO: query for username with client id
 function post(tableName, value, value2, status){
     postData(tableName, value, value2, status);
 }
+post('generatedShipFields', 4, 1, '123abc');
 
 /*
 Updates Data in Database
