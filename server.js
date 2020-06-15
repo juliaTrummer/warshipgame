@@ -32,8 +32,8 @@ get('battleshipUsers')
 TODO: query for getting cell status with client id
 TODO: client name with client id
  */
-async function get(tableName, clientId){
-    const data = await getData(tableName, clientId);
+async function get(tableName, fieldId, clientId){
+    const data = await getData(tableName, fieldId, clientId);
     return data;
 }
 
@@ -47,8 +47,8 @@ client name
 TODO: query for generated fields
 TODO: query for username with client id
  */
-function post(tableName, value, value2){
-    postData(tableName, value, value2);
+function post(tableName, value, value2, status){
+    postData(tableName, value, value2, status);
 }
 
 /*
@@ -94,23 +94,10 @@ async function getGeneratedBattleshipFields(){
     console.log(battleshipFields);
 }
 
-async function setGeneratedBattleshipFields(array){
-    for(let i in array){
-        if(i == 0){
-
-        }
-    }
+async function getUserSpecificFields(tableName, fieldId, clientId){
+    var userFields = await get(tableName, fieldId, clientId);
+    console.log(userFields);
 }
-
-async function getUserSpecificFields(clientId){
-    var userFields = await get('generatedShipFields', '23asdf4bcd');
-    console.log(userFields)
-}
-
-
-var server = http.createServer(app);
-server.listen(port);
-console.log("Server listening on port: %d", port);
 
 wss.on('request', function (request) {
     console.log('Connection from origin ' + request.origin, request.headers);
@@ -140,7 +127,8 @@ wss.on('request', function (request) {
 
                 //message from player after click on cell
                 if (type === "clickedCell") {
-                    var status = get('generatedShipFields', json.data.cell, userId) //TODO: query- get status where cell=cell & userId = userId
+                    console.log("INFO: Getting user specific field.")
+                    var status = getUserSpecificFields('generatedShipFields', json.data.cell, userId) //TODO: query- get status where cell=cell & userId = userId
                     //TODO: check what gets back (would net an integer)
 
                     //miss
@@ -174,7 +162,7 @@ wss.on('request', function (request) {
                                 var resetMsg = {
                                     type: "reset"
                                 };
-                                delete ('generatedShipFields')
+                                clear('generatedShipFields');
                                 wss.broadcast(JSON.stringify(resetMsg));
 
                                 clientNumber = {
@@ -206,7 +194,7 @@ wss.on('request', function (request) {
                         //TODO: check how we get data back and adapt code
                         while(id !== undefined){
                             testId = uuidv4()
-                            id = get("battleshipUsers", testId) //TODO: query: select where id = userId
+                            id = get("battleshipUsers", null, testId) //TODO: query: select where id = userId
                         } 
                         userId = testId
                         //user to db

@@ -1,10 +1,12 @@
 const dbQuery = require('../helper/db');
 
-async function get(tableName, clientId) {
+async function get(tableName, fieldId, clientId) {
 
         var sql;
 
-        if(clientId != undefined && clientId != null){
+        if(clientId !== undefined && clientId != null && fieldId !== undefined && fieldId != null){
+                sql = 'SELECT * FROM public.\"' + tableName + '\" WHERE "clientID" = \''+clientId+'\' AND "cellId" = '+fieldId+';';
+        }else if (clientId !== undefined && clientId != null) {
                 sql = 'SELECT * FROM public.\"' + tableName + '\" WHERE "clientID" = \''+clientId+'\';';
         }else{
                 sql = 'SELECT * FROM public.\"' + tableName + '\";';
@@ -12,15 +14,15 @@ async function get(tableName, clientId) {
 
         const result = await dbQuery(sql);
 
-        if(result != undefined && result != null && result != 0){
-                if(tableName == "battleshipUsers"){
+        if(result !== undefined && result !== 0){
+                if(tableName === "battleshipUsers"){
                         return result.map(item => {
                                 return {
                                         userName: item.userName,
                                         clientId: item.clientId || '',
                                 }
                         });
-                }else if(tableName == "generatedShipFields"){
+                }else if(tableName === "generatedShipFields"){
                         console.log(result);
                         return result.map(item => {
                                 return {
