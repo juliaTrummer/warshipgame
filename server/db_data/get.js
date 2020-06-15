@@ -19,7 +19,7 @@ async function get(tableName, fieldId, clientId) {
                         return result.map(item => {
                                 return {
                                         userName: item.userName,
-                                        clientId: item.clientId || '',
+                                        clientID: item.clientID || '',
                                 }
                         });
                 }else if(tableName === "generatedShipFields"){

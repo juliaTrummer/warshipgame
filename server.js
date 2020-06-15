@@ -89,13 +89,8 @@ async function getUserData(){
 /*
 --------Fields---------
  */
-async function getGeneratedBattleshipFields(){
-    var battleshipFields = await get('generatedShipFields');
-    console.log(battleshipFields);
-}
-
 async function getUserSpecificFields(tableName, fieldId, clientId){
-    var userFields = await get(tableName, fieldId, clientId);
+    const userFields = await get(tableName, fieldId, clientId);
     console.log(userFields);
 }
 
@@ -201,7 +196,7 @@ wss.on('request', function (request) {
                         post("battleshipUsers", json.data.name, userId) //TODO: query: name-string, id-string
                     } else {
                         //updating username
-                        put("battleshipUsers", json.data.name, userId) //TODO: query: name-string, id-string
+                        put("battleshipUsers", json.data.name, 'userName', userId, 'clientID') //TODO: query: name-string, id-string
                     }
 
                     var name = {
@@ -230,8 +225,8 @@ wss.on('request', function (request) {
             type: "reset"
         };
 
-        delete ('battleshipUsers')
-        delete ('generatedShipFields')
+        clear('battleshipUsers')
+        clear('generatedShipFields')
         wss.broadcast(JSON.stringify(resetMsg));
 
         if (index < 2) {
