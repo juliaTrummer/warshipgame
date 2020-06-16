@@ -5,7 +5,7 @@ async function get(tableName, fieldId, clientId) {
         var sql;
 
         if(clientId !== undefined && clientId != null && fieldId !== undefined && fieldId != null){
-                sql = 'SELECT * FROM public.\"' + tableName + '\" WHERE "clientID" = \''+clientId+'\' AND "cellId" = '+fieldId+';';
+                sql = 'SELECT * FROM public.\"' + tableName + '\" WHERE "clientID" = \''+ clientId +'\' AND "cellId" = '+ fieldId +';';
         }else if (clientId !== undefined && clientId != null) {
                 sql = 'SELECT * FROM public.\"' + tableName + '\" WHERE "clientID" = \''+clientId+'\';';
         }else{
@@ -33,7 +33,7 @@ async function get(tableName, fieldId, clientId) {
                         });
                 }
         }else{
-                console.log("ERROR: No clientId with " + clientId + "found");
+                console.log("ERROR: No Data found");
         }
 }
 

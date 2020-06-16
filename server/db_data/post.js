@@ -2,18 +2,21 @@ const dbQuery = require('../helper/db');
 
 function post(tableName, value, value2, fieldStatus) {
     let sql;
+    var values;
     if(tableName !== undefined && tableName != null && value !== undefined){
         if(value2 !== undefined && value2 != null && fieldStatus!== undefined && fieldStatus!=null ){
-            sql =  'INSERT INTO public.\"'+tableName+'\" VALUES (\''+value+'\', \''+value2+'\' , \''+fieldStatus+'\');';
+            sql =  'INSERT INTO public.\"'+tableName+'\" VALUES ($1, $2, $3);';
+            values = [value, value2,  fieldStatus];
         } else if(value2 !== undefined && value2 != null){
-            sql =  'INSERT INTO public.\"'+tableName+'\" VALUES (\''+value+'\', \''+value2+'\');';
+            sql =  'INSERT INTO public.\"'+tableName+'\" VALUES ($1, $2);';
+            values = [value, value2];
         } else{
-            sql =  'INSERT INTO public.\"'+tableName+'\" VALUES (\''+value+'\');';
+            sql =  'INSERT INTO public.\"'+tableName+'\" VALUES ($1);';
+            value = [value]
         }
-        console.log("INFO - " + sql);
-        dbQuery(sql);
+        dbQuery(sql, values);
     }else{
-        console.log("ERROR: Query Syntax");
+        console.log("ERROR: Variables not defined!");
     }
 }
 

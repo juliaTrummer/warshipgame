@@ -2,12 +2,14 @@ const getData = require('./server/db_data/get');
 const postData = require('./server/db_data/post');
 const deleteData = require('./server/db_data/delete');
 const putData = require('./server/db_data/put');
-var WebSocketServer = require("websocket").server;
+
+const port = process.env.PORT || 5000;
 const { v4: uuidv4 } = require('uuid');
-var http = require("http");
-var express = require('express');
+const http = require("http");
+const express = require('express');
+
+var WebSocketServer = require("websocket").server;
 var app = express();
-var port = process.env.PORT || 5000;
 var bodyParser = require('body-parser');
 var clients = [];
 var currentPlayer = ""
@@ -34,9 +36,9 @@ TODO: client name with client id
  */
 async function get(tableName, fieldId, clientId){
     const data = await getData(tableName, fieldId, clientId);
+    console.log(data);
     return data;
 }
-
 /*
 Inserts a new value to Database
 needs tablename and value to insert
@@ -58,9 +60,11 @@ EXAMPLE: put ('battleshipUsers', 'Lea', 'userName', 'Julia', 'userName');
 https://restfulapi.net/rest-put-vs-post/
 //TODO: query for client name with client id
  */
-function put(tableName, val1, col1, val2, col2){
-    putData(tableName, val1, col1, val2, col2);
+function put(val1, val2){
+    putData(val1, val2);
 }
+
+post('battleshipUsers', "JUlia", "asdf123");
 
 /*
 Deletes Table content
@@ -72,26 +76,6 @@ on close: clear names & shiptable
  */
 function clear (tableName){
     deleteData(tableName);
-}
-
-/*
--------Users----------
- */
-function setUserData(username, clientId){
-    post('battleshipUsers', username, clientId)
-}
-
-async function getUserData(){
-    var users = await get('battleshipUsers');
-    console.log(users);
-}
-
-/*
---------Fields---------
- */
-async function getUserSpecificFields(tableName, fieldId, clientId){
-    const userFields = await get(tableName, fieldId, clientId);
-    console.log(userFields);
 }
 
 wss.on('request', function (request) {
@@ -123,7 +107,7 @@ wss.on('request', function (request) {
                 //message from player after click on cell
                 if (type === "clickedCell") {
                     console.log("INFO: Getting user specific field.")
-                    var status = getUserSpecificFields('generatedShipFields', json.data.cell, userId) //TODO: query- get status where cell=cell & userId = userId
+                    var status = get('generatedShipFields', json.data.cell, userId) //TODO: query- get status where cell=cell & userId = userId
                     //TODO: check what gets back (would net an integer)
 
                     //miss
@@ -196,7 +180,7 @@ wss.on('request', function (request) {
                         post("battleshipUsers", json.data.name, userId) //TODO: query: name-string, id-string
                     } else {
                         //updating username
-                        put("battleshipUsers", json.data.name, 'userName', userId, 'clientID') //TODO: query: name-string, id-string
+                        put("battleshipUsers", json.data.name, userId) //TODO: query: name-string, id-string
                     }
 
                     var name = {
@@ -293,3 +277,4 @@ wss.broadcastTurn = function (currentPlayer) {
     wss.broadcastSpecific(JSON.stringify({ "type": "yourTurn" }), clients[currentPlayer]);
     wss.broadcastSpecific(JSON.stringify({ "type": "opponentsTurn" }), clients[currentPlayer === 0 ? 1 : 0])
 };
+
