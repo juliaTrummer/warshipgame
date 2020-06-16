@@ -106,7 +106,7 @@ wss.on('request', function (request) {
                 //message from player after click on cell
                 if (type === "clickedCell") {
                     console.log("INFO: Getting user specific field.", json.data.cell, json.data.id)
-                    var field = (await getUserSpecificFields('generatedShipFields', json.data.cell, json.data.id)) //FIXME: table-name: string, cellId: int, clientID: string 
+                    var field = (await get('generatedShipFields', json.data.cell, json.data.id)) //FIXME: table-name: string, cellId: int, clientID: string
                     //miss
                     if (field[0].status === -1) {
                         var msg = {
@@ -184,7 +184,7 @@ wss.on('request', function (request) {
                             }
                         }
 
-                        setUserData("battleshipUsers", json.data.name, createdId)  //FIXME: tablename:string, userName: string, clientID: string
+                        post("battleshipUsers", json.data.name, createdId);  //FIXME: tablename:string, userName: string, clientID: string
                         usernameAmount++
                         wss.broadcastSender(JSON.stringify(idMsg), connection) //sets userId in client
 

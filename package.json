@@ -21,6 +21,7 @@
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.2.1",
     "pg-connection-string": "latest",
+    "pg-format": "^1.0.4",
     "pg-hstore": "^2.3.3",
     "sequelize": "^5.21.12",
     "utf-8-validate": "^5.0.2",
