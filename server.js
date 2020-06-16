@@ -13,7 +13,7 @@ var app = express();
 var bodyParser = require('body-parser');
 var clients = [];
 var currentPlayer = ""
-var userId = null
+var usernameAmount = 0
 
 app.use(bodyParser.json());
 app.use(express.static('client'));
@@ -34,7 +34,7 @@ get('battleshipUsers')
 TODO: query for getting cell status with client id
 TODO: client name with client id
  */
-async function get(tableName, fieldId, clientId){
+async function get(tableName, fieldId, clientId) {
     const data = await getData(tableName, fieldId, clientId);
     console.log(data);
     return data;
@@ -49,7 +49,7 @@ client name
 TODO: query for generated fields
 TODO: query for username with client id
  */
-function post(tableName, value, value2, status){
+function post(tableName, value, value2, status) {
     postData(tableName, value, value2, status);
 }
 
@@ -74,7 +74,7 @@ on reset:
 next game: clear shiptable (change in game.js)
 on close: clear names & shiptable
  */
-function clear (tableName){
+function clear(tableName) {
     deleteData(tableName);
 }
 
@@ -84,45 +84,38 @@ wss.on('request', function (request) {
     var index = clients.push(connection) - 1;
 
     var clientNumber = {
-        "number": clients.length
+        number: clients.length
     };
 
     if (clients.length > 2) {
         wss.broadcastSender(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
     } else if (clients.length === 2) {
         wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection);
-        currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
-        wss.broadcastTurn(currentPlayer)
-    } else { 
+    } else {
         wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+        //check that game starts always with empty tables
+        if((await getUserData('battleshipUsers')) !== undefined){ //FIXME: table-name: string
+            clear('battleshipUsers')
+        }
+        if((await getUserData('generatedShipFields')) !== undefined){ //FIXME: table-name: string
+            clear('generatedShipFields')
+        }
     }
 
 
-    connection.on('message', function (message) {
+    connection.on('message', async function (message) {
         if (message.type === 'utf8') {
             try {
                 var json = JSON.parse(message.utf8Data);
                 var type = json.type;
 
+
                 //message from player after click on cell
                 if (type === "clickedCell") {
-                    console.log("INFO: Getting user specific field.")
-                    var status = get('generatedShipFields', json.data.cell, userId) //TODO: query- get status where cell=cell & userId = userId
-                    //TODO: check what gets back (would net an integer)
-
+                    console.log("INFO: Getting user specific field.", json.data.cell, json.data.id)
+                    var field = (await getUserSpecificFields('generatedShipFields', json.data.cell, json.data.id)) //FIXME: table-name: string, cellId: int, clientID: string 
                     //miss
-                    if (status === -1) {
-                        var msg = {
-                            type: "shipCell",
-                            data: {
-                                cell: json.data.cell,
-                            }
-                        }
-                        wss.broadcastSender(JSON.stringify(msg), connection)
-                        currentPlayer = currentPlayer === 0 ? 1 : 0;
-                        wss.broadcastTurn(currentPlayer)
-                    } else {
-                        //ship
+                    if (field[0].status === -1) {
                         var msg = {
                             type: "missCell",
                             data: {
@@ -130,18 +123,33 @@ wss.on('request', function (request) {
                             }
                         }
                         wss.broadcastSender(JSON.stringify(msg), connection)
+                        currentPlayer = currentPlayer === 0 ? 1 : 0;
+                        wss.broadcastTurn(currentPlayer, false)
+                    } else {
+                        //ship
+                        var msg = {
+                            type: "shipCell",
+                            data: {
+                                cell: json.data.cell,
+                            }
+                        }
+                        wss.broadcastSender(JSON.stringify(msg), connection)
 
                         //game over - player has won
-                        if (json.data.foundShipCounter === 16) {
+                        if (json.data.foundShipCounter === 16) { 
                             var lossMsg = {
                                 type: "loss"
                             };
                             wss.broadcastSpecific(JSON.stringify(lossMsg), clients[currentPlayer === 0 ? 1 : 0]);
-                            setTimeout(function () {
+                            clear('generatedShipFields'); //FIXME: tablename: string
+
+                            setTimeout(function () { 
                                 var resetMsg = {
-                                    type: "reset"
+                                    type: "reset",
+                                    data: {
+                                        newGame: true
+                                    }
                                 };
-                                clear('generatedShipFields');
                                 wss.broadcast(JSON.stringify(resetMsg));
 
                                 clientNumber = {
@@ -153,7 +161,7 @@ wss.on('request', function (request) {
                                 } else if (clients.length === 2) {
                                     wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection);
                                     currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
-                                    wss.broadcastTurn(currentPlayer)
+                                    wss.broadcastTurn(currentPlayer, true)
                                 } else {
                                     wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
                                 }
@@ -161,23 +169,36 @@ wss.on('request', function (request) {
                         } else {
                             //game continues
                             currentPlayer = currentPlayer === 0 ? 1 : 0;
-                            wss.broadcastTurn(currentPlayer)
+                            wss.broadcastTurn(currentPlayer, false)
                         }
                     }
                 } else if (type === "username") {
-                    //username gets updated or set
-                    if (userId === null) {
-                        var testId;
-                        var id = "undefined"
+                    if (json.data.userId === null) {
+                        //adding new user
+                        var createdId;
+                        var userWithId = null
 
-                        //TODO: check how we get data back and adapt code
-                        while(id !== undefined){
-                            testId = uuidv4()
-                            id = get("battleshipUsers", null, testId) //TODO: query: select where id = userId
-                        } 
-                        userId = testId
-                        //user to db
-                        post("battleshipUsers", json.data.name, userId) //TODO: query: name-string, id-string
+                        while (userWithId !== undefined) {
+                            createdId = uuidv4()
+                            userWithId = await get("battleshipUsers", null, createdId) //FIXME: tablename: string, null (name does not matter), clientID: string
+                            //returns row with created testId - duplicate check
+                        }
+
+                        var idMsg = {
+                            type: "userId",
+                            data: {
+                                id: createdId
+                            }
+                        }
+
+                        setUserData("battleshipUsers", json.data.name, createdId)  //FIXME: tablename:string, userName: string, clientID: string
+                        usernameAmount++
+                        wss.broadcastSender(JSON.stringify(idMsg), connection) //sets userId in client
+
+                        if (usernameAmount === 2) { //wanted to do this with db but it was too slow
+                            currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
+                            wss.broadcastTurn(currentPlayer, true)
+                        }
                     } else {
                         //updating username
                         put("battleshipUsers", json.data.name, userId) //TODO: query: name-string, id-string
@@ -188,10 +209,20 @@ wss.on('request', function (request) {
                     };
 
                     var json = JSON.stringify({ type: 'username', data: name });
-                    wss.broadcastRecipients(json, connection)
-                } else if (type === "cellStatus") {
-                    //sets cells in db
-                    post("generatedShipFields", json.data.cell, userId, json.data.status) //TODO: query: cell-int, userId-string, status-int
+
+                    var otherClient;
+                    for (var i = 0; i < 2; i++) {
+                        if (clients[i] !== connection) {
+                            otherClient = clients[i]
+                        }
+                    }
+
+                    wss.broadcastSpecific(json, otherClient) //sends name to other player
+
+
+
+                } else if (type === "generatedCell") {
+                    post("generatedShipFields", json.data.grid, json.data.id, "cells") //FIXME: grid: array including -1/1, cellId: string, type: "cells" (could be changed)
                 }
             } catch (e) {
                 console.log('Error parsing JSON', e)
@@ -206,11 +237,14 @@ wss.on('request', function (request) {
         console.log('Connection closed')
         clientNumber["number"] = clients.length; //do not need tahat
         var resetMsg = {
-            type: "reset"
+            type: "reset",
+            data: {
+                newGame: false
+            }
         };
 
-        clear('battleshipUsers')
-        clear('generatedShipFields')
+        clear('battleshipUsers') //tablename: string
+        clear('generatedShipFields') //tablename: string
         wss.broadcast(JSON.stringify(resetMsg));
 
         if (index < 2) {
@@ -228,12 +262,9 @@ wss.on('request', function (request) {
         if (clients.length > 2) {
             wss.broadcastSender(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
         } else if (clients.length === 2) {
-            //TODO: query: number of users (should work with current query i guess) - adapt according to how we get data
-            //var numberOfNames = get('battlshipUsers').length
-            //i will finish that after the query adaption (lea)
             wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection);
             currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
-            wss.broadcastTurn(currentPlayer)
+            wss.broadcastTurn(currentPlayer, false)
         } else {
             wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
         }
@@ -244,7 +275,6 @@ wss.on('request', function (request) {
 
 //message to all clients
 wss.broadcast = function (data) {
-    console.log('clients', clients, clients.length)
     clients.forEach(function (client) {
         client.sendUTF(data)
     })
@@ -273,8 +303,11 @@ wss.broadcastSpecific = function (data, client) {
     client.sendUTF(data)
 };
 
-wss.broadcastTurn = function (currentPlayer) {
-    wss.broadcastSpecific(JSON.stringify({ "type": "yourTurn" }), clients[currentPlayer]);
-    wss.broadcastSpecific(JSON.stringify({ "type": "opponentsTurn" }), clients[currentPlayer === 0 ? 1 : 0])
+wss.broadcastTurn = function (currentPlayer, isGameStart) {
+    var data= {
+        gameStart: isGameStart
+    }
+    wss.broadcastSpecific(JSON.stringify({ "type": "yourTurn", "data": data}), clients[currentPlayer]);
+    wss.broadcastSpecific(JSON.stringify({ "type": "opponentsTurn", "data": data }), clients[currentPlayer === 0 ? 1 : 0])
 };
 
