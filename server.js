@@ -64,8 +64,6 @@ function put(val1, val2){
     putData(val1, val2);
 }
 
-post('battleshipUsers', "JUlia", "asdf123");
-
 /*
 Deletes Table content
 needs tableName
@@ -88,20 +86,15 @@ wss.on('request', function (request) {
     };
 
     if (clients.length > 2) {
-        wss.broadcastSender(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+        wss.broadcastSender(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection);
     } else if (clients.length === 2) {
         wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection);
     } else {
-        wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
+        wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection);
         //check that game starts always with empty tables
-        if((await getUserData('battleshipUsers')) !== undefined){ //FIXME: table-name: string
-            clear('battleshipUsers')
-        }
-        if((await getUserData('generatedShipFields')) !== undefined){ //FIXME: table-name: string
-            clear('generatedShipFields')
-        }
+        clear('battleshipUsers');
+        clear('generatedShipFields');
     }
-
 
     connection.on('message', async function (message) {
         if (message.type === 'utf8') {
