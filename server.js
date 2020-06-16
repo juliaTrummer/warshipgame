@@ -108,18 +108,16 @@ wss.on('request', async function (request) {
     } else {
         wss.broadcast(JSON.stringify({ "type": 'clients', "data": clientNumber }), connection)
         //check that game starts always with empty tables
-        if((await get('battleshipUsers')) !== undefined){
+        if((await getUserData('battleshipUsers')) !== undefined){ //FIXME: table-name: string
             clear('battleshipUsers')
         }
-        if((await get('generatedShipFields')) !== undefined){
+        if((await getUserData('generatedShipFields')) !== undefined){ //FIXME: table-name: string
             clear('generatedShipFields')
         }
     }
 
 
     connection.on('message', async function (message) {
-        console.log('onmessage')
-
         if (message.type === 'utf8') {
             try {
                 var json = JSON.parse(message.utf8Data);
@@ -129,7 +127,7 @@ wss.on('request', async function (request) {
                 //message from player after click on cell
                 if (type === "clickedCell") {
                     console.log("INFO: Getting user specific field.", json.data.cell, json.data.id)
-                    var field = (await getUserSpecificFields('generatedShipFields', json.data.cell, json.data.id)) //TODO: query- get status where cell=cell & userId = userId
+                    var field = (await getUserSpecificFields('generatedShipFields', json.data.cell, json.data.id)) //FIXME: table-name: string, cellId: int, clientID: string 
                     //miss
                     if (field[0].status === -1) {
                         var msg = {
@@ -157,7 +155,7 @@ wss.on('request', async function (request) {
                                 type: "loss"
                             };
                             wss.broadcastSpecific(JSON.stringify(lossMsg), clients[currentPlayer === 0 ? 1 : 0]);
-                            clear('generatedShipFields');
+                            clear('generatedShipFields'); //FIXME: tablename: string
 
                             setTimeout(function () { 
                                 var resetMsg = {
@@ -196,7 +194,8 @@ wss.on('request', async function (request) {
 
                         while (userWithId !== undefined) {
                             createdId = uuidv4()
-                            userWithId = await get("battleshipUsers", null, createdId) //returns row with created testId - duplicate check
+                            userWithId = await get("battleshipUsers", null, createdId) //FIXME: tablename: string, null (name does not matter), clientID: string
+                            //returns row with created testId - duplicate check
                         }
 
                         var idMsg = {
@@ -206,7 +205,7 @@ wss.on('request', async function (request) {
                             }
                         }
 
-                        setUserData("battleshipUsers", json.data.name, createdId)  //user to db
+                        setUserData("battleshipUsers", json.data.name, createdId)  //FIXME: tablename:string, userName: string, clientID: string
                         usernameAmount++
                         wss.broadcastSender(JSON.stringify(idMsg), connection) //sets userId in client
 
@@ -216,7 +215,7 @@ wss.on('request', async function (request) {
                         }
                     } else {
                         //updating username
-                        put("battleshipUsers", json.data.name, "userName", json.data.userId, "clientID")
+                        put("battleshipUsers", json.data.name, "userName", json.data.userId, "clientID") //FIXME: tablename: string, userName: string, value1: "userName", clientID: string, value": "clientID"
                     }
 
                     var name = {
@@ -237,7 +236,7 @@ wss.on('request', async function (request) {
 
 
                 } else if (type === "generatedCell") {
-                    post("generatedShipFields", json.data.grid, json.data.id, "cells")
+                    post("generatedShipFields", json.data.grid, json.data.id, "cells") //FIXME: grid: array including -1/1, cellId: string, type: "cells" (could be changed)
                 }
             } catch (e) {
                 console.log('Error parsing JSON', e)
@@ -258,8 +257,8 @@ wss.on('request', async function (request) {
             }
         };
 
-        clear('battleshipUsers')
-        clear('generatedShipFields')
+        clear('battleshipUsers') //tablename: string
+        clear('generatedShipFields') //tablename: string
         wss.broadcast(JSON.stringify(resetMsg));
 
         if (index < 2) {
