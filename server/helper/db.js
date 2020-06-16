@@ -9,7 +9,10 @@ function getPool(){
         port: 5432,
         ssl: {
             rejectUnauthorized: false
-        }
+        },
+        max: 20,
+        connectionTimeoutMillis: 0,
+        idleTimeoutMillis: 0
     });
     return pool
 }

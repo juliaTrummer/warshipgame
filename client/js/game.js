@@ -14,6 +14,7 @@ $(function () {
     var turnText = $('#turn-text');
     var triedCells = [];
     var foundShipCounter = 0;
+    var userId = null
 
     //---websocket---
     window.WebSocket = window.WebSocket || window.MozWebSocket;
@@ -29,6 +30,8 @@ $(function () {
 
     ws.onopen = function () {
         console.log("Websocket opened")
+        createTable(gridA, "A");
+        createTable(gridB, "B");
     };
 
     ws.onerror = function (error) {
@@ -48,26 +51,29 @@ $(function () {
                     onClientMessage(json.data.number);
                     break;
                 case "yourTurn":
-                    onYourTurn();
+                    onYourTurn(json.data.gameStart);
                     break;
                 case "opponentsTurn":
-                    onOpponentsTurn();
+                    onOpponentsTurn(json.data.gameStart);
                     break;
                 case "loss":
                     turnText.text("You have lost! Next game starts in 10sec.");
                     break;
                 case "reset":
-                    resetGame();
+                    resetGame(json.data.newGame);
                     break;
                 case "close":
                     alert("Unfortunately your opponent logged of...");
                     break;
                 case "shipCell":
-                    onShipCell()
+                    onShipCell(json.data)
                     break
                 case "missCell":
-                    onMissCell()
+                    onMissCell(json.data)
                     break;
+                case "userId":
+                    userId = json.data.id
+                    break
                 default:
                     break
             }
@@ -83,24 +89,28 @@ $(function () {
         }
     }, 3000);
 
-    function onShipCell() {
-        $('#' + data.cell).append($('<i>').addClass('material-icons').text('directions_boat')).css('background-color', '#7FFF00').attr('disabled', 'disabled')
+    function onShipCell(data) {
+        $('#' + data.cell + "B").append($('<i>').addClass('material-icons').text('directions_boat')).css('background-color', '#7FFF00').attr('disabled', 'disabled')
         foundShipCounter++
         triedCells.push(data.cell);
 
-        if (foundShipCounter === 17) {
+        if (foundShipCounter === 17) { 
             turnText.text("You have won! Next game starts in 10sec.");
             disableCells()
         }
     }
 
-    function onMissCell() {
-        $('#' + data.cell).append($('<i>').addClass('material-icons').text('clear')).css('background-color', '#FF0000').attr('disabled', 'disabled')
+    function onMissCell(data) {
+        $('#' + data.cell + "B").append($('<i>').addClass('material-icons').text('clear')).css('background-color', '#FF0000').attr('disabled', 'disabled')
         triedCells.push(data.cell);
     }
 
-    function resetGame() {
-        username = "";
+    function resetGame(newGame) {
+        if (!newGame) {
+            username = "";
+            headingB.text("Your opponent's table");
+            headingA.text('Your table');
+        } 
         gridArray = new Array(100).fill(-1);
         triedCells = [];
         foundShipCounter = 0;
@@ -110,22 +120,25 @@ $(function () {
             $("#" + i + "A").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '')
         }
         gridB.addClass("disabled-look");
-        headingB.text("Your opponent's table");
-        headingA.text('Your table');
         turnText.addClass('centered-text-hidden').removeClass('centered-text');
-        generateRandomShips()
     }
 
-    function onYourTurn() {
+    function onYourTurn(gameStart) {
         enableCells();
         turnText.addClass('centered-text').removeClass('centered-text-hidden');
         turnText.text("It's your turn!")
+        if (gameStart) {
+            generateRandomShips()
+        }
     }
 
-    function onOpponentsTurn() {
+    function onOpponentsTurn(gameStart) {
         disableCells();
         turnText.addClass('centered-text').removeClass('centered-text-hidden');
         turnText.text("It's your opponent's turn!")
+        if (gameStart) {
+            generateRandomShips()
+        }
     }
 
     function onUserNameMessage(username) {
@@ -136,9 +149,8 @@ $(function () {
         if (userNumber === 2) {
             inputField.addClass("input-group").removeClass("input-group-hidden");
             waitingText.addClass("centered-text-hidden").removeClass("centered-text");
-            turnText.text('Wait until everyone entered their username!')
-            //enableCells()
-            //TODO: make clickable after usernames! (lea)
+            turnText.addClass('centered-text').removeClass('centered-text-hidden')
+            turnText.text('Please wait until everyone has entered their username!')
         } else if (userNumber > 2) {
             inputField.removeClass("input-group").addClass("input-group-hidden");
             waitingText.addClass("centerd-text").removeClass("centered-text-hidden").text("There is already a game going on. Please try again later!");
@@ -158,19 +170,13 @@ $(function () {
 
     function enableCells() {
         for (var i = 0; i < 100; i++) {
-            if (triedCells.find(element => element === i + "B") === undefined) {
+            if (triedCells.find(element => element === i+"") === undefined) { //if i find do not find that cell in that - remove attr
                 $("#" + i + "B").removeAttr('disabled')
             }
         }
         gridB.removeClass("disabled-look")
     }
 
-    //table
-    $(document).ready(function () {
-        createTable(gridA, "A");
-        createTable(gridB, "B");
-        generateRandomShips();
-    });
 
     function createTable(gridType, idType) {
         var tableBody = gridType;
@@ -213,7 +219,8 @@ $(function () {
             type: "clickedCell",
             data: {
                 cell: id.slice(0, -1),
-                foundShipCounter: foundShipCounter
+                foundShipCounter: foundShipCounter,
+                id: userId
             }
         }
         ws.send(JSON.stringify(msg))
@@ -240,7 +247,8 @@ $(function () {
         var msg = {
             type: "username",
             data: {
-                name: username
+                name: username,
+                userId: userId,
             }
         };
         ws.send(JSON.stringify(msg));
@@ -281,6 +289,14 @@ $(function () {
                 }
             }
         }
+        var msg = {
+            type: "generatedCell",
+            data: {
+                grid: gridArray,
+                id: userId
+            }
+        }
+        ws.send(JSON.stringify(msg))
     }
 
     function getRandomInt(min, max) {
@@ -306,18 +322,6 @@ $(function () {
         for (var i = start; i < end; i += increment) {
             $('#' + i + "A").append($('<i>').addClass('material-icons').text('directions_boat'));
             $('#' + i + "A").attr('disabled', 'disabled');
-        }
-
-
-        for (var i = 0; i < gridArray.length; i++) {
-            var msg = {
-                type: "generatedCell",
-                data: {
-                    cell: i,
-                    status: gridArray[i]
-                }
-            }
-            //ws.send(JSON.stringify(msg))
         }
     }
 
