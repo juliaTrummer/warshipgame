@@ -194,7 +194,7 @@ wss.on('request', function (request) {
                         }
                     } else {
                         //updating username
-                        put("battleshipUsers", json.data.name, userId) //TODO: query: name-string, id-string
+                        put("battleshipUsers", json.data.name, json.data.userId) //TODO: query: name-string, id-string
                     }
 
                     var name = {

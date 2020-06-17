@@ -94,7 +94,7 @@ $(function () {
         foundShipCounter++
         triedCells.push(data.cell);
 
-        if (foundShipCounter === 17) { 
+        if (foundShipCounter === 17) {
             turnText.text("You have won! Next game starts in 10sec.");
             disableCells()
         }
@@ -110,7 +110,7 @@ $(function () {
             username = "";
             headingB.text("Your opponent's table");
             headingA.text('Your table');
-        } 
+        }
         gridArray = new Array(100).fill(-1);
         triedCells = [];
         foundShipCounter = 0;
@@ -121,6 +121,8 @@ $(function () {
         }
         gridB.addClass("disabled-look");
         turnText.addClass('centered-text-hidden').removeClass('centered-text');
+        submitButton.text('Submit');
+        formControl.attr('placeholder', 'Enter an username');
     }
 
     function onYourTurn(gameStart) {
@@ -170,7 +172,7 @@ $(function () {
 
     function enableCells() {
         for (var i = 0; i < 100; i++) {
-            if (triedCells.find(element => element === i+"") === undefined) { //if i find do not find that cell in that - remove attr
+            if (triedCells.find(element => element === i + "") === undefined) { //if i find do not find that cell in that - remove attr
                 $("#" + i + "B").removeAttr('disabled')
             }
         }
