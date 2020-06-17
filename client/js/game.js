@@ -35,7 +35,8 @@ $(function () {
     };
 
     ws.onerror = function (error) {
-        console.log('Sorry, there is a problem with the connection.')
+        console.log('Sorry, there is a problem with the connection.', error)
+        alert("Sorry, there is a problem with the connection. Please try again later.")
     };
 
 
@@ -216,7 +217,6 @@ $(function () {
             return;
         }
 
-        console.log('clicked on cell: ' + id);
         var msg = {
             type: "clickedCell",
             data: {
