@@ -39,6 +39,9 @@ $(function () {
         alert("Sorry, there is a problem with the connection. Please try again later.")
     };
 
+    ws.onclose = function(){
+        console.log('Websocket closed')
+    }
 
     ws.onmessage = function (message) {
         try {
@@ -61,7 +64,7 @@ $(function () {
                     turnText.text("You have lost! Next game starts in 10sec.");
                     break;
                 case "reset":
-                    resetGame(json.data.newGame);
+                    resetGame(json.data.newGame, json.data.completeStart);
                     break;
                 case "close":
                     alert("Unfortunately your opponent logged of...");
@@ -106,12 +109,23 @@ $(function () {
         triedCells.push(data.cell);
     }
 
-    function resetGame(newGame) {
+    function resetGame(newGame, completeStart) {
         if (!newGame) {
             username = "";
             headingB.text("Your opponent's table");
             headingA.text('Your table');
         }
+
+        if(completeStart){
+            inputField.addClass("input-group").removeClass("input-group-hidden");
+            waitingText.addClass("centered-text-hidden").removeClass("centered-text");
+            turnText.addClass('centered-text').removeClass('centered-text-hidden')
+            turnText.text('Please wait until everyone has entered their username!')
+            userId = null
+        } else {
+            turnText.addClass('centered-text-hidden').removeClass('centered-text');
+        }
+
         gridArray = new Array(100).fill(-1);
         triedCells = [];
         foundShipCounter = 0;
@@ -121,7 +135,7 @@ $(function () {
             $("#" + i + "A").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '')
         }
         gridB.addClass("disabled-look");
-        turnText.addClass('centered-text-hidden').removeClass('centered-text');
+        
         submitButton.text('Submit');
         formControl.attr('placeholder', 'Enter an username');
     }
@@ -161,6 +175,7 @@ $(function () {
         } else {
             inputField.removeClass("input-group").addClass("input-group-hidden");
             waitingText.addClass("centered-text").removeClass("centered-text-hidden")
+            waitingText.text("Waiting for your opponent...")
         }
     }
 
