@@ -26,7 +26,7 @@ $(function () {
         return;
     }
     //TODO: heroku host
-    var host = location.origin.replace(/^http/, 'ws'); try wss maybe
+    var host = location.origin.replace(/^http/, 'ws');
     //var host = 'ws://127.0.0.1:5000' //- localhost:5000
     var ws = new WebSocket(host);
 
