@@ -1,7 +1,7 @@
 const dbQuery = require('../helper/db');
 const format = require('pg-format');
 
-function post(tableName, value, value2,type) {
+function post(tableName, value, value2, type) {
     let sql;
     var values = [];
     if(tableName !== undefined && tableName != null && value !== undefined){

@@ -155,7 +155,7 @@ wss.on('request', function (request) {
 
                             while (userWithId !== undefined) {
                                 createdId = uuidv4()
-                                userWithId = await get("battleshipUsers", null, createdId) //FIXME: tablename: string, null (name does not matter), clientID: string
+                                userWithId = await get("battleshipUsers", null, createdId); //FIXME: tablename: string, null (name does not matter), clientID: string
                                 //returns row with created testId - duplicate check
                             }
 
