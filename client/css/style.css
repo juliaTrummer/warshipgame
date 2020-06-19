@@ -70,13 +70,13 @@ table {
     opacity: 50%;
 }
 
-#heading-a{
+#heading-a, #ships-a{
     width: 50%;
     text-align: left;
     float: left;
 }
 
-#heading-b{
+#heading-b, #ships-b{
     width: 50%;
     text-align: right;
     float: right;
