@@ -83,7 +83,7 @@ wss.on('request', function (request) {
     var index = clients.push(connection) - 1;
     indices.push(index)
 
-    wss.handleNumberOfClients(connection, true, false, false)
+    wss.handleNumberOfClients(connection, true, false, false) //isOnRequest: true, newGame&gameShouldContinue: false
 
     connection.on('message', async function (message) {
         if (message.type === 'utf8') {
@@ -106,9 +106,11 @@ wss.on('request', function (request) {
                             }
                             wss.broadcastSender(JSON.stringify(msg), connection) //notifies player: miss
                             currentPlayer = currentPlayer === 0 ? 1 : 0;
-                            wss.broadcastTurn(currentPlayer, false)
+                            wss.broadcastTurn(currentPlayer, false) //notifies players for next turn
                         } else {
                             //ship
+                            isShip = true
+
                             var msg = {
                                 type: "shipCell",
                                 data: {
@@ -120,7 +122,10 @@ wss.on('request', function (request) {
                             //game over - current player has won
                             if (json.data.foundShipCounter === 16) { //FIXME: 16
                                 var lossMsg = {
-                                    type: "loss"
+                                    type: "loss",
+                                    data: {
+                                        foundShips: json.data.foundShipCounter + 1
+                                    }
                                 };
                                 wss.broadcastSpecific(JSON.stringify(lossMsg), clients[currentPlayer === 0 ? 1 : 0]); //notfies opponent: game lost
                                 clear('generatedShipFields'); //FIXME: tablename: string
@@ -133,15 +138,15 @@ wss.on('request', function (request) {
                                             completeStart: false
                                         }
                                     };
-                                    wss.broadcastSpecific(JSON.stringify(resetMsg), clients[0]); //TODO: only to players - notfies players that frontend has to be reset
+                                    wss.broadcastSpecific(JSON.stringify(resetMsg), clients[0]); //notfies players that frontend has to be reset
                                     wss.broadcastSpecific(JSON.stringify(resetMsg), clients[1]);
 
-                                    wss.handleNumberOfClients(connection, false, true, false, true)
+                                    wss.handleNumberOfClients(connection, false, true, false, true) //isOnRequest: false, newGame: true, gameShouldContinue: false, isGameGoingOn: true
                                 }, 10000)
                             } else {
                                 //game continues
                                 currentPlayer = currentPlayer === 0 ? 1 : 0;
-                                wss.broadcastTurn(currentPlayer, false)
+                                wss.broadcastTurn(currentPlayer, false, json.data.foundShipCounter + 1)
                             }
                         }
                         break
@@ -169,7 +174,7 @@ wss.on('request', function (request) {
 
                             if (usernameAmount === 2) { //checks if both players have entered their username
                                 currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
-                                wss.broadcastTurn(currentPlayer, true)
+                                wss.broadcastTurn(currentPlayer, true) //true: isGameStart
                             }
                         } else {
                             //updating username
@@ -183,13 +188,7 @@ wss.on('request', function (request) {
                             }
                         };
                         var json = JSON.stringify(name);
-                        var otherClient;
-
-                        for (var i = 0; i < 2; i++) {
-                            if (clients[i] !== connection) {
-                                otherClient = clients[i]
-                            }
-                        }
+                        var otherClient = connection === clients[0] ? clients[1] : clients[0]
 
                         wss.broadcastSpecific(json, otherClient) //sends new/updated name to other player
                         break
@@ -212,18 +211,17 @@ wss.on('request', function (request) {
 
 
     connection.on('close', function (connection) {
-        console.log('Connection closed', connection.remoteAddress)
+        console.log('Connection closed')
 
         var newIndex = indices.indexOf(index)
-        indices = indices.filter(function (value, ind, arr) { return value !== index; })
-        clients.splice(newIndex, 1); 
+        indices = indices.filter(function (value, ind, arr) { return value !== index; }) //deletes index of closing client
+        clients.splice(newIndex, 1);
         usernameAmount = 0
 
         if (newIndex === 1 || newIndex === 0) { //notfies other player in the game 
             var closeMsg = {
                 type: 'close'
             };
-            wss.broadcastSpecific(JSON.stringify(closeMsg), clients[0]) //alert - to staying player
 
             var resetMsg = {
                 type: "reset",
@@ -236,16 +234,14 @@ wss.on('request', function (request) {
             clear('battleshipUsers') //tablename: string
             clear('generatedShipFields') //tablename: string
 
-            wss.broadcastSpecific(JSON.stringify(resetMsg), clients[0])
-
             if (clients.length === 1) {
-                wss.handleNumberOfClients(clients[0], false, false, true)
-            } else {
-                wss.broadcastSpecific(JSON.stringify(resetMsg), clients[1])
-            }
-        } else {
-            if (clients.length === 1) {
-                wss.handleNumberOfClients(clients[0], false, false, true)
+                wss.broadcastSpecific(JSON.stringify(resetMsg), clients[0])
+                wss.broadcastSpecific(JSON.stringify(closeMsg), clients[0]) //alert - to staying player
+                wss.handleNumberOfClients(clients[0], false, false, true) //isOnRequest&newGame: false, gameShouldContinue: true
+            } else if (clients.length > 1) {
+                wss.broadcastSpecific(JSON.stringify(resetMsg), clients[1]) //resets game
+                wss.broadcastSpecific(JSON.stringify(resetMsg), clients[0])
+                wss.broadcastSpecific(JSON.stringify(closeMsg), clients[0]) //alert - to staying player
             }
         }
     })
@@ -260,37 +256,23 @@ wss.handleNumberOfClients = function (connection, isOnRequest, newGame, gameShou
         }
     }
 
-
     if (clients.length > 2) {
         //new client has to wait
-        if (isGameGoingOn) {
-            if (!gameShouldContinue) {
-
-                if (!isOnRequest) {
-                    currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
-                    wss.broadcastTurn(currentPlayer, newGame)
-                } else {
-                    wss.broadcast(JSON.stringify(clientNumber), connection);
-                }
-            }
+        if (isGameGoingOn) { //2 players are playing - after win
+            currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
+            wss.broadcastTurn(currentPlayer, newGame)
         } else {
             wss.broadcastSender(JSON.stringify(clientNumber), connection);
         }
 
     } else if (clients.length === 2) {
-        //game can start with submitting names
         if (!gameShouldContinue) {
-            if (!isOnRequest) {
-                currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
-                wss.broadcastTurn(currentPlayer, newGame)
-            } else {
-                wss.broadcast(JSON.stringify(clientNumber), connection);
-            }
+            wss.broadcast(JSON.stringify(clientNumber), connection); //client joined - notify
         }
+
     } else {
-        //TODO: on after win with more 
         wss.broadcast(JSON.stringify(clientNumber), connection);
-        if (isOnRequest) {
+        if (isOnRequest) { //client joins
             //games should always start with an empty table
             clear('battleshipUsers');
             clear('generatedShipFields');
@@ -330,9 +312,10 @@ wss.broadcastSpecific = function (data, client) {
 };
 
 //message for taking turns during a game
-wss.broadcastTurn = function (currentPlayer, isGameStart) {
+wss.broadcastTurn = function (currentPlayer, isGameStart, foundShips = null) {
     var data = {
-        gameStart: isGameStart
+        gameStart: isGameStart,
+        foundShips: foundShips
     }
     wss.broadcastSpecific(JSON.stringify({ "type": "yourTurn", "data": data }), clients[currentPlayer]);
     wss.broadcastSpecific(JSON.stringify({ "type": "opponentsTurn", "data": data }), clients[currentPlayer === 0 ? 1 : 0])

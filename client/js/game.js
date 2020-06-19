@@ -8,6 +8,8 @@ $(function () {
     var submitButton = $('#submitButton');
     var headingA = $('#heading-a');
     var headingB = $('#heading-b');
+    var shipsA = $('#ships-a');
+    var shipsB = $('#ships-b');
     var inputField = $('#name-input');
     var waitingText = $('#wait-text');
     var gridArray = new Array(100).fill(-1);
@@ -24,7 +26,7 @@ $(function () {
         return;
     }
     //TODO: heroku host
-    var host = location.origin.replace(/^http/, 'ws');
+    var host = location.origin.replace(/^http/, 'ws'); try wss maybe
     //var host = 'ws://127.0.0.1:5000' //- localhost:5000
     var ws = new WebSocket(host);
 
@@ -39,7 +41,7 @@ $(function () {
         alert("Sorry, there is a problem with the connection. Please try again later.")
     };
 
-    ws.onclose = function(){
+    ws.onclose = function () {
         console.log('Websocket closed')
     }
 
@@ -55,13 +57,13 @@ $(function () {
                     onClientMessage(json.data.number);
                     break;
                 case "yourTurn":
-                    onYourTurn(json.data.gameStart);
+                    onYourTurn(json.data.gameStart, json.data.foundShips);
                     break;
                 case "opponentsTurn":
                     onOpponentsTurn(json.data.gameStart);
                     break;
                 case "loss":
-                    turnText.text("You have lost! Next game starts in 10sec.");
+                    onLoss(json.data.foundShips)
                     break;
                 case "reset":
                     resetGame(json.data.newGame, json.data.completeStart);
@@ -93,30 +95,48 @@ $(function () {
         }
     }, 3000);
 
+    function onLoss(foundShips) {
+        turnText.text("You have lost! Next game starts in 10sec.");
+        shipsA.text('Number of ships your opponent has sunken: ' + foundShips)
+    }
+
+    //player clicked on a cell with a ship
     function onShipCell(data) {
         $('#' + data.cell + "B").append($('<i>').addClass('material-icons').text('directions_boat')).css('background-color', '#7FFF00').attr('disabled', 'disabled')
         foundShipCounter++
         triedCells.push(data.cell);
+        shipsB.text("Number of ships you have sunken: " + foundShipCounter)
 
+        //check for win
         if (foundShipCounter === 17) {
             turnText.text("You have won! Next game starts in 10sec.");
             disableCells()
         }
     }
 
+    //player clicked a cell without a ship
     function onMissCell(data) {
         $('#' + data.cell + "B").append($('<i>').addClass('material-icons').text('clear')).css('background-color', '#FF0000').attr('disabled', 'disabled')
         triedCells.push(data.cell);
     }
 
     function resetGame(newGame, completeStart) {
+    //after win: newGame: true, completeStart: false
+    //player closed: newGame: false, completeStart: true
+
+        //the 2 player do NOT keep playing
         if (!newGame) {
             username = "";
             headingB.text("Your opponent's table");
             headingA.text('Your table');
+            submitButton.text('Submit');
+            formControl.attr('placeholder', 'Enter an username');
+        } else {
+            submitButton.text('Update');
+            formControl.attr('placeholder', 'Enter a new username');
         }
 
-        if(completeStart){
+        if (completeStart) {
             inputField.addClass("input-group").removeClass("input-group-hidden");
             waitingText.addClass("centered-text-hidden").removeClass("centered-text");
             turnText.addClass('centered-text').removeClass('centered-text-hidden')
@@ -135,15 +155,18 @@ $(function () {
             $("#" + i + "A").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '')
         }
         gridB.addClass("disabled-look");
-        
-        submitButton.text('Submit');
-        formControl.attr('placeholder', 'Enter an username');
+
+        shipsA.text('Number of ships your opponent has sunken: 0')
+        shipsB.text('Number of ships you have sunken: 0')
     }
 
-    function onYourTurn(gameStart) {
+    function onYourTurn(gameStart, foundShips) {
         enableCells();
         turnText.addClass('centered-text').removeClass('centered-text-hidden');
         turnText.text("It's your turn!")
+        if (foundShips !== null) { //notification if other has found a ship
+            shipsA.text('Number of ships your opponent has sunken: ' + foundShips)
+        }
         if (gameStart) {
             generateRandomShips()
         }
@@ -163,16 +186,16 @@ $(function () {
     }
 
     function onClientMessage(userNumber) {
-        if (userNumber === 2) {
+        if (userNumber === 2) { //start of name input
             inputField.addClass("input-group").removeClass("input-group-hidden");
             waitingText.addClass("centered-text-hidden").removeClass("centered-text");
             turnText.addClass('centered-text').removeClass('centered-text-hidden')
             turnText.text('Please wait until everyone has entered their username!')
-        } else if (userNumber > 2) {
+        } else if (userNumber > 2) { //client cannot play and has to wait
             inputField.removeClass("input-group").addClass("input-group-hidden");
             waitingText.addClass("centerd-text").removeClass("centered-text-hidden").text("There is already a game going on. Please try again later!");
             disableCells()
-        } else {
+        } else { //client has to wait for another player
             inputField.removeClass("input-group").addClass("input-group-hidden");
             waitingText.addClass("centered-text").removeClass("centered-text-hidden")
             waitingText.text("Waiting for your opponent...")
@@ -188,7 +211,7 @@ $(function () {
 
     function enableCells() {
         for (var i = 0; i < 100; i++) {
-            if (triedCells.find(element => element === i + "") === undefined) { //if i find do not find that cell in that - remove attr
+            if (triedCells.find(element => element === i + "") === undefined) { //if i don't find a cell in the array, remove the attribute
                 $("#" + i + "B").removeAttr('disabled')
             }
         }
@@ -206,17 +229,13 @@ $(function () {
             var row = $('<tr>');
             for (var j = 0; j < 12; j++) {
                 if ((j === 0 || j === 11) && (i !== 0 && i !== 11)) {
-                    var cell = $('<td>').addClass('table-cell numbering').text(alphabet[i - 1]);
+                    var cell = $('<td>').addClass('table-cell numbering').text(alphabet[i - 1]); //outer cells with letters
                 } else if ((i === 0 || i === 11) && (j !== 0 && j !== 11)) {
-                    var cell = $('<td>').addClass('table-cell  numbering').text(j);
+                    var cell = $('<td>').addClass('table-cell  numbering').text(j); //outer cells with numbers
                 } else if (((i === 0 || i === 11) && (j == 0 || j == 11)) || ((j === 0 || j === 11) && (i == 0 || i == 11))) {
-                    var cell = $('<td>');
+                    var cell = $('<td>'); //corner cells
                 } else {
-                    if (idType === "A") {
-                        var cell = $('<td>').addClass('table-cell  field').click(function () { onCellClick($(this).attr('id')) }).attr('id', id + idType).attr('disabled', 'disabled');
-                    } else {
-                        var cell = $('<td>').addClass('table-cell  field').click(function () { onCellClick($(this).attr('id')) }).attr('id', id + idType).attr('disabled', 'disabled');
-                    }
+                    var cell = $('<td>').addClass('table-cell  field').click(function () { onCellClick($(this).attr('id')) }).attr('id', id + idType).attr('disabled', 'disabled');
                     id++;
                 }
                 row.append(cell);
@@ -248,6 +267,7 @@ $(function () {
         onSubmit();
     })
 
+    //for entering the name with "enter"
     formControl.keyup(function (e) {
         if (e.which == 13 && formControl.val().length !== 0) {
             onSubmit();
