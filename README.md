@@ -1,6 +1,8 @@
 # Battleship Game
 This is a project for the lecture Webservice Development SS2020.  
-For further information read the documentation or contact one of the contributers.
+For further information read the documentation or contact one of the contributers.  
+  
+Game: [https://fhbattleshipgame.herokuapp.com/ ]
 
 ## Game Rules
 * The grid has 10x10 cells.
