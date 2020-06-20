@@ -288,15 +288,6 @@ wss.broadcast = function (data) {
     })
 };
 
-//message to all clients but NOT the sender
-wss.broadcastRecipients = function (data, sender) {
-    clients.forEach(function (client) {
-        if (client !== sender) {
-            client.sendUTF(data)
-        }
-    })
-};
-
 //message only to sender
 wss.broadcastSender = function (data, sender) {
     clients.forEach(function (client) {
