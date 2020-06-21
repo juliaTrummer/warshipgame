@@ -12,9 +12,9 @@ var WebSocketServer = require("websocket").server;
 var app = express();
 var bodyParser = require('body-parser');
 var clients = [];
-var currentPlayer = ""
-var usernameAmount = 0
-var indices = []
+var currentPlayer = "";
+var usernameAmount = 0;
+var indices = [];
 
 app.use(bodyParser.json());
 app.use(express.static('client'));

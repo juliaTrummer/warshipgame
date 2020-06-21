@@ -32,8 +32,6 @@ async function get(tableName, fieldId, clientId) {
                                 }
                         });
                 }
-        }else{
-                console.log("ERROR: No Data found");
         }
 }
 
