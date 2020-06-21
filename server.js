@@ -37,7 +37,6 @@ TODO: client name with client id
  */
 async function get(tableName, fieldId, clientId) {
     const data = await getData(tableName, fieldId, clientId);
-    console.log(data)
     return data;
 }
 /*
@@ -223,6 +222,8 @@ wss.on('request', function (request) {
                 type: 'close'
             };
 
+            wss.broadcastSpecific(JSON.stringify(closeMsg), clients[0]) //alert - to staying player
+
             var resetMsg = {
                 type: "reset",
                 data: {
@@ -234,21 +235,23 @@ wss.on('request', function (request) {
             clear('battleshipUsers') //tablename: string
             clear('generatedShipFields') //tablename: string
 
+            wss.broadcastSpecific(JSON.stringify(resetMsg), clients[0])
+
             if (clients.length === 1) {
-                wss.broadcastSpecific(JSON.stringify(resetMsg), clients[0])
-                wss.broadcastSpecific(JSON.stringify(closeMsg), clients[0]) //alert - to staying player
-                wss.handleNumberOfClients(clients[0], false, false, true) //isOnRequest&newGame: false, gameShouldContinue: true
-            } else if (clients.length > 1) {
-                wss.broadcastSpecific(JSON.stringify(resetMsg), clients[1]) //resets game
-                wss.broadcastSpecific(JSON.stringify(resetMsg), clients[0])
-                wss.broadcastSpecific(JSON.stringify(closeMsg), clients[0]) //alert - to staying player
+                wss.handleNumberOfClients(clients[0], false, false, true)
+            } else {
+                wss.broadcastSpecific(JSON.stringify(resetMsg), clients[1])
             }
         }
     })
 });
 
-
-wss.handleNumberOfClients = function (connection, isOnRequest, newGame, gameShouldContinue, isGameGoingOn = false) {
+/**
+ * on request: connection, true, false, false
+ * on win/loss: connection, false, true, false, true
+ * on close: connection, false, false, true
+ */
+wss.handleNumberOfClients = function (connection, isOnRequest, newGame, gameShouldContinue, isGameGoingOn = false) { //gameShouldContinue: true on close, isGAmeGoingOn: win
     var clientNumber = {
         type: "clients",
         data: {
@@ -258,7 +261,7 @@ wss.handleNumberOfClients = function (connection, isOnRequest, newGame, gameShou
 
     if (clients.length > 2) {
         //new client has to wait
-        if (isGameGoingOn) { //2 players are playing - after win
+        if (isGameGoingOn) {
             currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
             wss.broadcastTurn(currentPlayer, newGame)
         } else {
@@ -266,10 +269,15 @@ wss.handleNumberOfClients = function (connection, isOnRequest, newGame, gameShou
         }
 
     } else if (clients.length === 2) {
+        //game can start with submitting names
         if (!gameShouldContinue) {
-            wss.broadcast(JSON.stringify(clientNumber), connection); //client joined - notify
+            if (!isOnRequest) {
+                currentPlayer = (Math.floor(Math.random() * (2 * 1)) + 1) - 1;
+                wss.broadcastTurn(currentPlayer, newGame)
+            } else {
+                wss.broadcast(JSON.stringify(clientNumber), connection);
+            }
         }
-
     } else {
         wss.broadcast(JSON.stringify(clientNumber), connection);
         if (isOnRequest) { //client joins
