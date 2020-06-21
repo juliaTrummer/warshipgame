@@ -84,7 +84,7 @@ $(function () {
                     break
             }
         } catch (e) {
-            console.log('Error parsing JSON: ', e);
+            console.log('Error parsing JSON');
             return;
         }
     };
@@ -121,8 +121,8 @@ $(function () {
     }
 
     function resetGame(newGame, completeStart) {
-    //after win: newGame: true, completeStart: false
-    //player closed: newGame: false, completeStart: true
+        //after win: newGame: true, completeStart: false
+        //player closed: newGame: false, completeStart: true
 
         //the 2 player do NOT keep playing
         if (!newGame) {
@@ -143,7 +143,7 @@ $(function () {
             turnText.text('Please wait until everyone has entered their username!')
             userId = null
         } else {
-            turnText.addClass('centered-text-hidden').removeClass('centered-text');
+           turnText.addClass('centered-text-hidden').removeClass('centered-text');
         }
 
         gridArray = new Array(100).fill(-1);
