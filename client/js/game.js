@@ -16,7 +16,7 @@ $(function () {
     var turnText = $('#turn-text');
     var triedCells = [];
     var foundShipCounter = 0;
-    var userId = null
+    var userId = null;
 
     //---websocket---
     window.WebSocket = window.WebSocket || window.MozWebSocket;
@@ -31,14 +31,14 @@ $(function () {
     var ws = new WebSocket(host);
 
     ws.onopen = function () {
-        console.log("Websocket opened")
+        console.log("Websocket opened");
         createTable(gridA, "A");
         createTable(gridB, "B");
     };
 
     ws.onerror = function (error) {
-        console.log('Sorry, there is a problem with the connection.', error)
-        alert("Sorry, there is a problem with the connection. Please try again later.")
+        console.log('Sorry, there is a problem with the connection.', error);
+        alert("Sorry, there is a problem with the connection. Please try again later.");
     };
 
     ws.onclose = function () {
@@ -63,7 +63,7 @@ $(function () {
                     onOpponentsTurn(json.data.gameStart);
                     break;
                 case "loss":
-                    onLoss(json.data.foundShips)
+                    onLoss(json.data.foundShips);
                     break;
                 case "reset":
                     resetGame(json.data.newGame, json.data.completeStart);
@@ -72,13 +72,13 @@ $(function () {
                     alert("Unfortunately your opponent logged of...");
                     break;
                 case "shipCell":
-                    onShipCell(json.data)
+                    onShipCell(json.data);
                     break
                 case "missCell":
-                    onMissCell(json.data)
+                    onMissCell(json.data);
                     break;
                 case "userId":
-                    userId = json.data.id
+                    userId = json.data.id;
                     break
                 default:
                     break
@@ -96,27 +96,29 @@ $(function () {
     }, 3000);
 
     function onLoss(foundShips) {
-        turnText.text("You have lost! Next game starts in 10sec.");
+        turnText.text("YOU LOST! \nNext game starts in 10sec.");
+        document.getElementById("turn-text").style.color = "red";
         shipsA.text('Number of ships your opponent has sunken: ' + foundShips)
     }
 
     //player clicked on a cell with a ship
     function onShipCell(data) {
-        $('#' + data.cell + "B").append($('<i>').addClass('material-icons').text('directions_boat')).css('background-color', '#7FFF00').attr('disabled', 'disabled')
-        foundShipCounter++
+        $('#' + data.cell + "B").append($('<i>').addClass('material-icons').text('directions_boat')).css('background-color', '#7FFF00').attr('disabled', 'disabled');
+        foundShipCounter++;
         triedCells.push(data.cell);
-        shipsB.text("Number of ships you have sunken: " + foundShipCounter)
+        shipsB.text("Number of ships you have sunken: " + foundShipCounter);
 
         //check for win
-        if (foundShipCounter === 17) {
-            turnText.text("You have won! Next game starts in 10sec.");
+        if (foundShipCounter === 2) {
+            turnText.text("YOU WON! \nNext game starts in 10sec.");
+            document.getElementById("turn-text").style.color = "lightgreen";
             disableCells()
         }
     }
 
     //player clicked a cell without a ship
     function onMissCell(data) {
-        $('#' + data.cell + "B").append($('<i>').addClass('material-icons').text('clear')).css('background-color', '#FF0000').attr('disabled', 'disabled')
+        $('#' + data.cell + "B").append($('<i>').addClass('material-icons').text('clear')).css('background-color', '#FF0000').attr('disabled', 'disabled');
         triedCells.push(data.cell);
     }
 
@@ -139,8 +141,8 @@ $(function () {
         if (completeStart) {
             inputField.addClass("input-group").removeClass("input-group-hidden");
             waitingText.addClass("centered-text-hidden").removeClass("centered-text");
-            turnText.addClass('centered-text').removeClass('centered-text-hidden')
-            turnText.text('Please wait until everyone has entered their username!')
+            turnText.addClass('centered-text').removeClass('centered-text-hidden');
+            turnText.text('Please wait until everyone has entered their username!');
             userId = null
         } else {
            turnText.addClass('centered-text-hidden').removeClass('centered-text');
@@ -152,18 +154,18 @@ $(function () {
 
         for (var i = 0; i < 100; i++) {
             $("#" + i + "B").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '');
-            $("#" + i + "A").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '')
+            $("#" + i + "A").attr('disabled', 'disabled').removeClass('material-icons').text('').css('background-color', '');
         }
         gridB.addClass("disabled-look");
 
-        shipsA.text('Number of ships your opponent has sunken: 0')
+        shipsA.text('Number of ships your opponent has sunken: 0');
         shipsB.text('Number of ships you have sunken: 0')
     }
 
     function onYourTurn(gameStart, foundShips) {
         enableCells();
         turnText.addClass('centered-text').removeClass('centered-text-hidden');
-        turnText.text("It's your turn!")
+        turnText.text("It's your turn!");
         if (foundShips !== null) { //notification if other has found a ship
             shipsA.text('Number of ships your opponent has sunken: ' + foundShips)
         }
@@ -175,7 +177,7 @@ $(function () {
     function onOpponentsTurn(gameStart) {
         disableCells();
         turnText.addClass('centered-text').removeClass('centered-text-hidden');
-        turnText.text("It's your opponent's turn!")
+        turnText.text("It's your opponent's turn!");
         if (gameStart) {
             generateRandomShips()
         }
@@ -189,7 +191,7 @@ $(function () {
         if (userNumber === 2) { //start of name input
             inputField.addClass("input-group").removeClass("input-group-hidden");
             waitingText.addClass("centered-text-hidden").removeClass("centered-text");
-            turnText.addClass('centered-text').removeClass('centered-text-hidden')
+            turnText.addClass('centered-text').removeClass('centered-text-hidden');
             turnText.text('Please wait until everyone has entered their username!')
         } else if (userNumber > 2) { //client cannot play and has to wait
             inputField.removeClass("input-group").addClass("input-group-hidden");
@@ -197,7 +199,7 @@ $(function () {
             disableCells()
         } else { //client has to wait for another player
             inputField.removeClass("input-group").addClass("input-group-hidden");
-            waitingText.addClass("centered-text").removeClass("centered-text-hidden")
+            waitingText.addClass("centered-text").removeClass("centered-text-hidden");
             waitingText.text("Waiting for your opponent...")
         }
     }
@@ -341,7 +343,7 @@ $(function () {
     }
 
     function areCellsFree(start, end, increment) {
-        var testGrid = gridArray
+        var testGrid = gridArray;
         for (var i = start; i < end; i += increment) {
             if (gridArray[i] === -1) {
                 testGrid[i] = 1

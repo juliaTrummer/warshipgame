@@ -15,7 +15,7 @@ const actualID = '690906d8-2c38-4f0c-a5e0-3e3ea4bd08fb';
 //test if  JEST works
 test('testing JEST is working', ()=>{
     expect(1).toBe(1);
-})
+});
 
 //getting Data from DB without creating a User first
 test('getUserFromDB', async () => {
@@ -57,4 +57,4 @@ test('getFieldsFalse', async  () =>{
     return getData('battleshipFields', 1, actualID).then(data => {
         expect(data!=null).toBe(false);
     });
-})
+});
