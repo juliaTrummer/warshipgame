@@ -25,7 +25,8 @@ test('getUserFromDB', async () => {
 });
 
 test('postUserToDB', async () => {
-    postData(dbName, userName, createdId);
+   var data = await postData(dbName, userName, createdId);
+   expect(data===undefined).toBe(true);
 });
 
 //should return user
