@@ -109,3 +109,18 @@ table {
     text-align: right;
     float: right;
 }
+
+
+@media screen and (max-width: 850px) {
+   #table-grid-b{
+        width: fit-content;
+        margin-top: 50px;
+        margin-left: 3%;
+        position: unset;
+        align-content: center;
+        float: inherit;
+    }
+    #table-grid-b{
+        margin-left: 3%;
+    }
+}
