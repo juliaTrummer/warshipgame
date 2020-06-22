@@ -27,7 +27,7 @@ $(function () {
     }
     //TODO: heroku host
     var host = location.origin.replace(/^http/, 'ws');
-    //var host = 'ws://127.0.0.1:5000' //- localhost:5000
+    //var host = 'ws://127.0.0.1:5000'; //- localhost:5000
     var ws = new WebSocket(host);
 
     ws.onopen = function () {
@@ -359,8 +359,7 @@ $(function () {
 
     function setShips(start, end, increment) {
         for (var i = start; i < end; i += increment) {
-            $('#' + i + "A").append($('<i>').addClass('material-icons').text('directions_boat'));
-            $('#' + i + "A").attr('disabled', 'disabled');
+            $('#' + i + "A").append($('<i>').addClass('material-icons').text('directions_boat')).attr('disabled', 'disabled');
         }
     }
 
