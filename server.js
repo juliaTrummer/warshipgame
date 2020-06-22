@@ -209,8 +209,6 @@ wss.on('request', function (request) {
 
     });
 
-
-
     connection.on('close', function (connection) {
         console.log('Connection closed');
 
@@ -234,8 +232,8 @@ wss.on('request', function (request) {
                 }
             };
 
-            clear('battleshipUsers');//tablename: string
-            clear('generatedShipFields'); //tablename: string
+            clear('battleshipUsers');
+            clear('generatedShipFields'); 
 
             wss.broadcastSpecific(JSON.stringify(resetMsg), clients[0]);
 

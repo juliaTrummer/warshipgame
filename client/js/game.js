@@ -36,7 +36,8 @@ $(function () {
         createTable(gridB, "B");
     };
 
-    ws.onerror = function (error) {
+    //works in Firefox
+    ws.onerror = function (error) { 
         console.log('Sorry, there is a problem with the connection.', error);
         alert("Sorry, there is a problem with the connection. Please try again later.");
     };
