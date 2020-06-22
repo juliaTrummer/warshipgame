@@ -109,7 +109,7 @@ $(function () {
         shipsB.text("Number of ships you have sunken: " + foundShipCounter);
 
         //check for win
-        if (foundShipCounter === 16) {
+        if (foundShipCounter === 17) {
             turnText.text("YOU WON! \nNext game starts in 10sec.").css('color', '#7FFF00');
             disableCells()
         }
