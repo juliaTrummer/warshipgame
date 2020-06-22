@@ -30,17 +30,18 @@ test('postUserToDB', async () => {
 
 //should return user
 test('getUserDataTrue', async ()=>{
-    return getData(dbName, null, createdId).then(data => {
+    postData(dbName, userName, createdId);
+    getData(dbName, null, createdId).then(data => {
         expect(data!=null).toBe(true);
     });
 });
 
-//should be empty
+//should be undefined
 test('deleteUserData', async ()=>{
-    jest.setTimeout(30000);
     await deleteData('battleshipUsers');
-    return getData(dbName, null, createdId).then(data => {
-        expect(data!=null).toBe(false);
+    jest.setTimeout(30000);
+    getData(dbName, null, createdId).then(data => {
+        expect(data).toBe(undefined);
     });
 });
 
@@ -52,9 +53,10 @@ test('putUserData', async  () =>{
     });
 });
 
-test('getFieldsFalse', async  () =>{
+test('getFieldsAfterDelete', async  () =>{
+    await deleteData('generatedShipFields');
     jest.setTimeout(30000);
-    return getData('battleshipFields', 1, actualID).then(data => {
-        expect(data!=null).toBe(false);
+    return getData('generatedShipFields', 1, actualID).then(data => {
+        expect(data).toBe(undefined);
     });
 });
