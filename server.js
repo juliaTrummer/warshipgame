@@ -15,6 +15,7 @@ var clients = [];
 var currentPlayer = "";
 var usernameAmount = 0;
 var indices = [];
+var clickNumber = 0;
 
 app.use(bodyParser.json());
 app.use(express.static('client'));
@@ -87,6 +88,11 @@ wss.on('request', function (request) {
                 switch (json.type) {
                     //message from player after click on cell
                     case "clickedCell":
+                        clickNumber++
+                        if(clickNumber>1){
+                            return;
+                        }
+
                         console.log("INFO: Getting user specific field.", json.data.cell, json.data.id);
                         var field = (await get('generatedShipFields', json.data.cell, json.data.id));
 
@@ -143,6 +149,7 @@ wss.on('request', function (request) {
                                 wss.broadcastTurn(currentPlayer, false, json.data.foundShipCounter + 1)
                             }
                         }
+                        clickNumber = 0;
                         break
                     case "username":
                         if (json.data.userId === null) { //adding new user
