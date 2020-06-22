@@ -25,7 +25,7 @@ $(function () {
         console.log('Sorry, your browser does not support websockets');
         return;
     }
-    //TODO: heroku host
+    //TODO: change between heroku and local
     var host = location.origin.replace(/^http/, 'ws');
     //var host = 'ws://127.0.0.1:5000'; //- localhost:5000
     var ws = new WebSocket(host);
@@ -96,8 +96,7 @@ $(function () {
     }, 3000);
 
     function onLoss(foundShips) {
-        turnText.text("YOU LOST! \nNext game starts in 10sec.");
-        document.getElementById("turn-text").style.color = "red";
+        turnText.text("YOU LOST! \nNext game starts in 10sec.").css('color', '#FF0000');
         shipsA.text('Number of ships your opponent has sunken: ' + foundShips)
     }
 
@@ -109,9 +108,8 @@ $(function () {
         shipsB.text("Number of ships you have sunken: " + foundShipCounter);
 
         //check for win
-        if (foundShipCounter === 2) {
-            turnText.text("YOU WON! \nNext game starts in 10sec.");
-            document.getElementById("turn-text").style.color = "lightgreen";
+        if (foundShipCounter === 3) {
+            turnText.text("YOU WON! \nNext game starts in 10sec.").css('color', '#7FFF00');
             disableCells()
         }
     }
@@ -141,11 +139,10 @@ $(function () {
         if (completeStart) {
             inputField.addClass("input-group").removeClass("input-group-hidden");
             waitingText.addClass("centered-text-hidden").removeClass("centered-text");
-            turnText.addClass('centered-text').removeClass('centered-text-hidden');
-            turnText.text('Please wait until everyone has entered their username!');
+            turnText.addClass('centered-text').removeClass('centered-text-hidden').text('Please wait until everyone has entered their username!').css('color', '');
             userId = null
         } else {
-           turnText.addClass('centered-text-hidden').removeClass('centered-text');
+           turnText.addClass('centered-text-hidden').removeClass('centered-text').css('color', '');
         }
 
         gridArray = new Array(100).fill(-1);
@@ -164,8 +161,7 @@ $(function () {
 
     function onYourTurn(gameStart, foundShips) {
         enableCells();
-        turnText.addClass('centered-text').removeClass('centered-text-hidden');
-        turnText.text("It's your turn!");
+        turnText.addClass('centered-text').removeClass('centered-text-hidden').text("It's your turn!");
         if (foundShips !== null) { //notification if other has found a ship
             shipsA.text('Number of ships your opponent has sunken: ' + foundShips)
         }
@@ -176,8 +172,7 @@ $(function () {
 
     function onOpponentsTurn(gameStart) {
         disableCells();
-        turnText.addClass('centered-text').removeClass('centered-text-hidden');
-        turnText.text("It's your opponent's turn!");
+        turnText.addClass('centered-text').removeClass('centered-text-hidden').text("It's your opponent's turn!");
         if (gameStart) {
             generateRandomShips()
         }
@@ -191,16 +186,14 @@ $(function () {
         if (userNumber === 2) { //start of name input
             inputField.addClass("input-group").removeClass("input-group-hidden");
             waitingText.addClass("centered-text-hidden").removeClass("centered-text");
-            turnText.addClass('centered-text').removeClass('centered-text-hidden');
-            turnText.text('Please wait until everyone has entered their username!')
+            turnText.addClass('centered-text').removeClass('centered-text-hidden').text('Please wait until everyone has entered their username!');
         } else if (userNumber > 2) { //client cannot play and has to wait
             inputField.removeClass("input-group").addClass("input-group-hidden");
             waitingText.addClass("centerd-text").removeClass("centered-text-hidden").text("There is already a game going on. Please try again later!");
             disableCells()
         } else { //client has to wait for another player
             inputField.removeClass("input-group").addClass("input-group-hidden");
-            waitingText.addClass("centered-text").removeClass("centered-text-hidden");
-            waitingText.text("Waiting for your opponent...")
+            waitingText.addClass("centered-text").removeClass("centered-text-hidden").text("Waiting for your opponent...");
         }
     }
 
